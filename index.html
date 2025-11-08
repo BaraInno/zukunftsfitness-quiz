@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI & Digitalisierung Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        function Quiz() {
+          const [screen, setScreen] = useState('start');
+          const [currentQ, setCurrentQ] = useState(0);
+          const [answers, setAnswers] = useState([]);
+          const [email, setEmail] = useState('');
+          const [submitted, setSubmitted] = useState(false);
+          const formRef = useRef(null);
+
+          const quiz = {
+            title: "KI & Digitalisierung Quiz",
+            desc: "Teste dein Wissen über Künstliche Intelligenz!",
+            questions: [
+              {
+                q: "Was bedeutet die Abkürzung KI?",
+                opts: ["Komplexe Informatik", "Künstliche Intelligenz", "Kreative Innovation", "Kommunikative Integration"],
+                correct: 1
+              },
+              {
+                q: "Welches dieser Tools ist ein KI-Sprachmodell?",
+                opts: ["Microsoft Excel", "Adobe Photoshop", "ChatGPT", "Windows"],
+                correct: 2
+              },
+              {
+                q: "Was ist Machine Learning?",
+                opts: ["Eine Programmiersprache", "Ein Betriebssystem", "Ein Verfahren, bei dem Computer aus Daten lernen", "Eine Hardware-Komponente"],
+                correct: 2
+              },
+              {
+                q: "Welcher Bereich profitiert NICHT von KI?",
+                opts: ["Gesundheitswesen", "Bildung", "Automobilindustrie", "Keiner - alle Bereiche können profitieren"],
+                correct: 3
+              },
+              {
+                q: "Was ist ein Prompt bei KI-Tools?",
+                opts: ["Ein Fehler im System", "Eine Eingabe oder Anweisung an die KI", "Ein Update für die Software", "Eine Sicherheitseinstellung"],
+                correct: 1
+              }
+            ]
+          };
+
+          const handleAnswer = (idx) => {
+            setAnswers([...answers, { selected: idx, correct: quiz.questions[currentQ].correct }]);
+            if (currentQ < quiz.questions.length - 1) {
+              setCurrentQ(currentQ + 1);
+            } else {
+              setScreen('results');
+            }
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            if (email && email.includes('@')) {
+              if (formRef.current) {
+                const ts = document.querySelector('input[name="timestamp"]');
+                if (ts) ts.value = new Date().toISOString();
+                setTimeout(() => {
+                  formRef.current.submit();
+                  setTimeout(() => setSubmitted(true), 1000);
+                }, 100);
+              }
+            }
+          };
+
+          const correct = answers.filter(a => a.selected === a.correct).length;
+          const score = Math.round((correct / quiz.questions.length) * 100);
+
+          if (screen === 'start') {
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12 text-center">
+                  <div className="text-6xl mb-6">🏆</div>
+                  <h1 className="text-4xl font-bold text-gray-800 mb-4">{quiz.title}</h1>
+                  <p className="text-xl text-gray-600 mb-8">{quiz.desc}</p>
+                  <div className="bg-orange-50 rounded-lg p-6 mb-8">
+                    <p className="text-lg"><strong>{quiz.questions.length} Fragen</strong> warten auf dich!</p>
+                  </div>
+                  <button onClick={() => setScreen('quiz')} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-lg text-lg">
+                    Quiz starten
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          if (screen === 'quiz') {
+            const q = quiz.questions[currentQ];
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12">
+                  <div className="mb-6">
+                    <p className="text-sm font-semibold text-orange-600 mb-4">Frage {currentQ + 1} von {quiz.questions.length}</p>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-8">{q.q}</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {q.opts.map((opt, idx) => (
+                      <button key={idx} onClick={() => handleAnswer(idx)} className="w-full text-left p-5 rounded-lg border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all">
+                        <span className="inline-block w-8 h-8 rounded-full bg-orange-100 text-orange-600 text-center leading-8 mr-4 font-semibold">
+                          {String.fromCharCode(65 + idx)}
+                        </span>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+              <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12">
+                <div className="text-center mb-8">
+                  <div className="text-6xl mb-6">{score >= 80 ? '🎉' : score >= 60 ? '👍' : '💪'}</div>
+                  <h2 className="text-4xl font-bold mb-4">Dein Ergebnis: {score}%</h2>
+                  <p className="text-xl text-gray-600">{correct} von {quiz.questions.length} Fragen richtig!</p>
+                </div>
+
+                {!submitted ? (
+                  <div className="bg-orange-50 rounded-lg p-6 mb-6">
+                    <div className="text-center mb-4">
+                      <span className="text-2xl">📧</span>
+                      <h3 className="text-lg font-semibold mt-2">Bleib informiert!</h3>
+                    </div>
+                    <p className="text-center mb-4">Möchtest du mehr über KI erfahren? Hinterlasse deine Email!</p>
+                    
+                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec" method="GET" target="hidden_iframe" onSubmit={handleSubmit}>
+                      <input type="hidden" name="score" value={score} />
+                      <input type="hidden" name="correctAnswers" value={correct} />
+                      <input type="hidden" name="totalQuestions" value={quiz.questions.length} />
+                      <input type="hidden" name="timestamp" value="" />
+                      
+                      <div className="flex gap-3">
+                        <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="deine@email.com" className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none" required />
+                        <button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-lg">
+                          Absenden
+                        </button>
+                      </div>
+                    </form>
+                    <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
+                  </div>
+                ) : (
+                  <div className="bg-green-50 rounded-lg p-6 mb-6 text-center">
+                    <span className="text-3xl">✅</span>
+                    <p className="text-green-800 font-semibold mt-2">Vielen Dank! Wir haben deine Email erhalten.</p>
+                  </div>
+                )}
+
+                <button onClick={() => { setScreen('start'); setCurrentQ(0); setAnswers([]); setEmail(''); setSubmitted(false); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-8 py-4 rounded-lg">
+                  Quiz nochmal machen
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<Quiz />);
+    </script>
+</body>
+</html>
