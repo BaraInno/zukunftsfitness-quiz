@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI & Digitalisierung Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script type="text/babel" data-type="module">
+        const { useState, useRef } = React;
+        const { Mail, CheckCircle, XCircle, Trophy } = lucide;
+
+        function InteractiveQuiz() {
+          const [currentScreen, setCurrentScreen] = useState('start');
+          const [currentQuestion, setCurrentQuestion] = useState(0);
+          const [answers, setAnswers] = useState([]);
+          const [email, setEmail] = useState('');
+          const [emailSubmitted, setEmailSubmitted] = useState(false);
+          const [submitError, setSubmitError] = useState('');
+          const [isSubmitting, setIsSubmitting] = useState(false);
+          const formRef = useRef(null);
+
+          const quizData = {
+            title: "KI & Digitalisierung Quiz",
+            description: "Teste dein Wissen über Künstliche Intelligenz und Digitalisierung!",
+            questions: [
+              {
+                question: "Was bedeutet die Abkürzung KI?",
+                options: [
+                  "Komplexe Informatik",
+                  "Künstliche Intelligenz",
+                  "Kreative Innovation",
+                  "Kommunikative Integration"
+                ],
+                correct: 1
+              },
+              {
+                question: "Welches dieser Tools ist ein KI-Sprachmodell?",
+                options: [
+                  "Microsoft Excel",
+                  "Adobe Photoshop",
+                  "ChatGPT",
+                  "Windows"
+                ],
+                correct: 2
+              },
+              {
+                question: "Was ist Machine Learning?",
+                options: [
+                  "Eine Programmiersprache",
+                  "Ein Betriebssystem",
+                  "Ein Verfahren, bei dem Computer aus Daten lernen",
+                  "Eine Hardware-Komponente"
+                ],
+                correct: 2
+              },
+              {
+                question: "Welcher Bereich profitiert NICHT von KI?",
+                options: [
+                  "Gesundheitswesen",
+                  "Bildung",
+                  "Automobilindustrie",
+                  "Keiner - alle Bereiche können profitieren"
+                ],
+                correct: 3
+              },
+              {
+                question: "Was ist ein Prompt bei KI-Tools?",
+                options: [
+                  "Ein Fehler im System",
+                  "Eine Eingabe oder Anweisung an die KI",
+                  "Ein Update für die Software",
+                  "Eine Sicherheitseinstellung"
+                ],
+                correct: 1
+              }
+            ]
+          };
+
+          const handleAnswer = (selectedIndex) => {
+            const newAnswers = [...answers, {
+              question: currentQuestion,
+              selected: selectedIndex,
+              correct: quizData.questions[currentQuestion].correct
+            }];
+            setAnswers(newAnswers);
+
+            if (currentQuestion < quizData.questions.length - 1) {
+              setCurrentQuestion(currentQuestion + 1);
+            } else {
+              setCurrentScreen('results');
+            }
+          };
+
+          const handleEmailSubmit = (e) => {
+            e.preventDefault();
+            
+            if (!email || !email.includes('@')) {
+              setSubmitError('Bitte gib eine gültige Email-Adresse ein');
+              return;
+            }
+
+            setIsSubmitting(true);
+            setSubmitError('');
+
+            // Aktualisiere Timestamp vor dem Submit
+            const timestampInput = document.querySelector('input[name="timestamp"]');
+            if (timestampInput) {
+              timestampInput.value = new Date().toISOString();
+            }
+
+            // Submit das Form
+            setTimeout(() => {
+              if (formRef.current) {
+                formRef.current.submit();
+              }
+              // Zeige Erfolg nach dem Submit
+              setTimeout(() => {
+                setEmailSubmitted(true);
+                setIsSubmitting(false);
+              }, 1500);
+            }, 100);
+          };
+
+          const restartQuiz = () => {
+            setCurrentScreen('start');
+            setCurrentQuestion(0);
+            setAnswers([]);
+            setEmail('');
+            setEmailSubmitted(false);
+          };
+
+          const correctAnswers = answers.filter(a => a.selected === a.correct).length;
+          const score = Math.round((correctAnswers / quizData.questions.length) * 100);
+
+          // Start Screen
+          if (currentScreen === 'start') {
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                  <div className="text-center">
+                    <div className="inline-block p-4 bg-orange-100 rounded-full mb-6">
+                      <Trophy className="w-12 h-12 text-orange-600" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                      {quizData.title}
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-8">
+                      {quizData.description}
+                    </p>
+                    <div className="bg-orange-50 rounded-lg p-6 mb-8">
+                      <p className="text-lg text-gray-700">
+                        <strong>{quizData.questions.length} Fragen</strong> warten auf dich!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setCurrentScreen('quiz')}
+                      className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors shadow-lg"
+                    >
+                      Quiz starten
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Quiz Screen
+          if (currentScreen === 'quiz') {
+            const question = quizData.questions[currentQuestion];
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm font-semibold text-orange-600">
+                        Frage {currentQuestion + 1} von {quizData.questions.length}
+                      </span>
+                      <div className="flex gap-2">
+                        {quizData.questions.map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-2 h-2 rounded-full ${
+                              idx < currentQuestion ? 'bg-orange-600' :
+                              idx === currentQuestion ? 'bg-orange-400' : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8">
+                      {question.question}
+                    </h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {question.options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswer(index)}
+                        className="w-full text-left p-5 rounded-lg border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all duration-200 text-gray-700 font-medium"
+                      >
+                        <span className="inline-block w-8 h-8 rounded-full bg-orange-100 text-orange-600 text-center leading-8 mr-4 font-semibold">
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Results Screen with Email Collection
+          if (currentScreen === 'results') {
+            return (
+              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                  <div className="text-center mb-8">
+                    <div className={`inline-block p-4 rounded-full mb-6 ${
+                      score >= 80 ? 'bg-green-100' : score >= 60 ? 'bg-yellow-100' : 'bg-orange-100'
+                    }`}>
+                      <Trophy className={`w-12 h-12 ${
+                        score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-orange-600'
+                      }`} />
+                    </div>
+                    <h2 className="text-4xl font-bold text-gray-800 mb-4">
+                      Dein Ergebnis: {score}%
+                    </h2>
+                    <p className="text-xl text-gray-600 mb-6">
+                      {correctAnswers} von {quizData.questions.length} Fragen richtig beantwortet!
+                    </p>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4 mb-8">
+                      {answers.map((answer, idx) => (
+                        <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                          <span className="text-gray-700">Frage {idx + 1}</span>
+                          {answer.selected === answer.correct ? (
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                          ) : (
+                            <XCircle className="w-6 h-6 text-red-600" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {!emailSubmitted ? (
+                    <div className="bg-orange-50 rounded-lg p-6 mb-6">
+                      <div className="flex items-center justify-center mb-4">
+                        <Mail className="w-6 h-6 text-orange-600 mr-2" />
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          Bleib informiert!
+                        </h3>
+                      </div>
+                      <p className="text-gray-600 text-center mb-4">
+                        Möchtest du mehr über KI und Digitalisierung erfahren? Hinterlasse deine Email-Adresse!
+                      </p>
+                      {submitError && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                          <p className="text-red-700 text-sm">{submitError}</p>
+                        </div>
+                      )}
+                      
+                      <form 
+                        ref={formRef}
+                        action="https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec"
+                        method="GET"
+                        target="hidden_iframe"
+                        onSubmit={handleEmailSubmit}
+                        style={{ margin: 0 }}
+                      >
+                        <input type="hidden" name="score" value={score} />
+                        <input type="hidden" name="correctAnswers" value={correctAnswers} />
+                        <input type="hidden" name="totalQuestions" value={quizData.questions.length} />
+                        <input type="hidden" name="timestamp" value="" />
+                        
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <input
+                            type="email"
+                            name="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="deine@email.com"
+                            className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none"
+                            disabled={isSubmitting}
+                            required
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isSubmitting ? 'Wird gesendet...' : 'Absenden'}
+                          </button>
+                        </div>
+                      </form>
+                      
+                      <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 rounded-lg p-6 mb-6 text-center">
+                      <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                      <p className="text-green-800 font-semibold">
+                        Vielen Dank! Wir haben deine Email-Adresse erhalten.
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={restartQuiz}
+                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-8 py-4 rounded-lg transition-colors"
+                  >
+                    Quiz nochmal machen
+                  </button>
+                </div>
+              </div>
+            );
+          }
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<InteractiveQuiz />);
+    </script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</body>
+</html>
