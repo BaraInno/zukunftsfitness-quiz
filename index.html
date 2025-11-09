@@ -3,173 +3,612 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KI & Digitalisierung Quiz</title>
+    <title>Der 3-Minuten-Zukunftsfitness Check</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Custom brand colors */
+        .bg-brand-50 { background-color: #fff7ed; }
+        .bg-brand-100 { background-color: #ffedd5; }
+        .bg-brand-200 { background-color: #fed7aa; }
+        .bg-brand-300 { background-color: #fdba74; }
+        .bg-brand-600 { background-color: #ea580c; }
+        .bg-brand-700 { background-color: #c2410c; }
+        .text-brand-600 { color: #ea580c; }
+        .border-brand-200 { border-color: #fed7aa; }
+        .border-brand-300 { border-color: #fdba74; }
+        .border-brand-500 { border-color: #f97316; }
+        .hover\:bg-brand-50:hover { background-color: #fff7ed; }
+        .hover\:bg-brand-700:hover { background-color: #c2410c; }
+        .hover\:border-brand-500:hover { border-color: #f97316; }
+        .focus\:border-brand-500:focus { border-color: #f97316; }
+    </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useRef, useEffect } = React;
 
-        function Quiz() {
+        function ZukunftsfitnesCheck() {
           const [screen, setScreen] = useState('start');
-          const [currentQ, setCurrentQ] = useState(0);
-          const [answers, setAnswers] = useState([]);
+          const [currentDimension, setCurrentDimension] = useState(0);
+          const [currentQuestion, setCurrentQuestion] = useState(0);
+          const [answers, setAnswers] = useState({});
           const [email, setEmail] = useState('');
-          const [submitted, setSubmitted] = useState(false);
+          const [emailSubmitted, setEmailSubmitted] = useState(false);
+          const [dataSubmitted, setDataSubmitted] = useState(false);
           const formRef = useRef(null);
 
-          const quiz = {
-            title: "KI & Digitalisierung Quiz",
-            desc: "Teste dein Wissen über Künstliche Intelligenz!",
-            questions: [
+          const assessment = {
+            title: "Der 3-Minuten-Zukunftsfitness Check:",
+            subtitle: "Wie fit ist eure Organisation?",
+            description: "Nicht auf dem Papier, sondern in eurem Alltag. Dieses Mini-Quiz zeigt, wie oft Zukunft wirklich mit am Tisch sitzt – und ob aus guten Fragen auch Handlungen folgen.",
+            instruction: "Denkt an eure letzten 3-5 Meetings oder Entscheidungsrunden:",
+            instructionPoints: [
+              "Wurden Fragen dieser Art von euch oder jemandem in der Runde gefragt?",
+              "Wurde danach auch entsprechend entschieden oder gehandelt?"
+            ],
+            dimensions: [
               {
-                q: "Was bedeutet die Abkürzung KI?",
-                opts: ["Komplexe Informatik", "Künstliche Intelligenz", "Kreative Innovation", "Kommunikative Integration"],
-                correct: 1
+                name: "Wertorientierung",
+                subtitle: "Tun wir das Richtige?",
+                icon: "🎯",
+                questions: [
+                  "Was können wir weglassen, damit wir unsere Top-3-Prioritäten schneller voranbringen?",
+                  "Wie genau zahlt dieses Thema auf unseren Kundennutzen und Geschäftserfolg ein?"
+                ]
               },
               {
-                q: "Welches dieser Tools ist ein KI-Sprachmodell?",
-                opts: ["Microsoft Excel", "Adobe Photoshop", "ChatGPT", "Windows"],
-                correct: 2
+                name: "Zusammenarbeit",
+                subtitle: "Die richtigen Menschen, effektiv zusammen",
+                icon: "🤝",
+                questions: [
+                  "Sitzen in dieser Runde alle, die das Thema wirklich verstehen und entscheiden können?",
+                  "Ist klar, wer ab jetzt wofür Verantwortung übernimmt, damit wir das gemeinsam voranbringen?"
+                ]
               },
               {
-                q: "Was ist Machine Learning?",
-                opts: ["Eine Programmiersprache", "Ein Betriebssystem", "Ein Verfahren, bei dem Computer aus Daten lernen", "Eine Hardware-Komponente"],
-                correct: 2
+                name: "Anpassungsfähigkeit",
+                subtitle: "Lernen mit & von Kund:innen",
+                icon: "🔄",
+                questions: [
+                  "Können wir es erst in klein ausprobieren, bevor wir es final festzurren?",
+                  "Sehen wir in Daten unserer Kund:innen und Geschäftszahlen, dass das die richtige Maßnahme ist?"
+                ]
               },
               {
-                q: "Welcher Bereich profitiert NICHT von KI?",
-                opts: ["Gesundheitswesen", "Bildung", "Automobilindustrie", "Keiner - alle Bereiche können profitieren"],
-                correct: 3
+                name: "Innovationskraft",
+                subtitle: "Kreativität mit Wirkung",
+                icon: "💡",
+                questions: [
+                  "Wie könnte uns KI oder andere Technologien helfen, dieses Thema deutlich besser oder schneller zu lösen?",
+                  "Ich habe mich mit Firma Y ausgetauscht und wir könnten unsere Herausforderung X im Kerngeschäft mit Innovation Z gut lösen - wollen wir es in einem kleinen Piloten testen?"
+                ]
               },
               {
-                q: "Was ist ein Prompt bei KI-Tools?",
-                opts: ["Ein Fehler im System", "Eine Eingabe oder Anweisung an die KI", "Ein Update für die Software", "Eine Sicherheitseinstellung"],
-                correct: 1
+                name: "KI-Fitness",
+                subtitle: "Persönliche Zukunftsfitness",
+                icon: "🤖",
+                isBonus: true,
+                bonusText: "Bonus Fragen zu KI - hier geht es nicht um ein Meeting sondern euren Alltag:",
+                questions: [
+                  {
+                    text: "Wie häufig nutzt du persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
+                    options: [
+                      { text: "Mehrmals täglich", color: "green" },
+                      { text: "Mehrmals wöchentlich", color: "green" },
+                      { text: "Mehrmals monatlich", color: "yellow" },
+                      { text: "Selten", color: "red" },
+                      { text: "Ich nutze kaum KI Tools", color: "red" }
+                    ]
+                  },
+                  {
+                    text: "Wann hast du zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das du vorher noch nie genutzt hast?",
+                    options: [
+                      { text: "Heute", color: "green" },
+                      { text: "In den letzten Tagen", color: "green" },
+                      { text: "Im letzten Monat", color: "yellow" },
+                      { text: "Dieses Jahr", color: "red" },
+                      { text: "Ich nutze kaum KI Tools", color: "red" }
+                    ]
+                  }
+                ]
               }
+            ],
+            standardOptions: [
+              { text: "🟢 Ja – gefragt und gehandelt", value: 2, color: "green" },
+              { text: "🟡 Ja – gefragt, aber...", value: 1, color: "yellow" },
+              { text: "🔴 Nein – kam nicht vor", value: 0, color: "red" }
             ]
           };
 
-          const handleAnswer = (idx) => {
-            setAnswers([...answers, { selected: idx, correct: quiz.questions[currentQ].correct }]);
-            if (currentQ < quiz.questions.length - 1) {
-              setCurrentQ(currentQ + 1);
+          const getTotalQuestions = () => {
+            return assessment.dimensions.reduce((sum, dim) => {
+              return sum + (Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length);
+            }, 0);
+          };
+
+          const handleAnswer = (answer) => {
+            const dim = assessment.dimensions[currentDimension];
+            const questionKey = `dim${currentDimension}_q${currentQuestion}`;
+            
+            setAnswers({...answers, [questionKey]: answer});
+
+            // Check if we need to move to next question or dimension
+            const questionsInDim = Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length;
+            
+            if (currentQuestion < questionsInDim - 1) {
+              setCurrentQuestion(currentQuestion + 1);
+            } else if (currentDimension < assessment.dimensions.length - 1) {
+              setCurrentDimension(currentDimension + 1);
+              setCurrentQuestion(0);
             } else {
+              // All questions answered - submit data and show results
+              submitData();
               setScreen('results');
             }
           };
 
-          const handleSubmit = (e) => {
-            e.preventDefault();
-            if (email && email.includes('@')) {
-              if (formRef.current) {
-                const ts = document.querySelector('input[name="timestamp"]');
-                if (ts) ts.value = new Date().toISOString();
-                setTimeout(() => {
-                  formRef.current.submit();
-                  setTimeout(() => setSubmitted(true), 1000);
-                }, 100);
+          const calculateResults = () => {
+            const dimensionResults = assessment.dimensions.map((dim, dimIdx) => {
+              if (dim.isBonus) {
+                // KI Fitness - count colors
+                const q0Color = answers[`dim${dimIdx}_q0`]?.color || 'red';
+                const q1Color = answers[`dim${dimIdx}_q1`]?.color || 'red';
+                
+                let status = 'red';
+                if (q0Color === 'green' && q1Color === 'green') status = 'green';
+                else if (q0Color === 'green' || q1Color === 'green' || (q0Color === 'yellow' && q1Color === 'yellow')) status = 'yellow';
+                
+                return {
+                  name: dim.name,
+                  icon: dim.icon,
+                  subtitle: dim.subtitle,
+                  status: status,
+                  points: null,
+                  isBonus: true
+                };
+              } else {
+                // Regular dimensions - sum points
+                let points = 0;
+                dim.questions.forEach((_, qIdx) => {
+                  const answer = answers[`dim${dimIdx}_q${qIdx}`];
+                  points += answer?.value || 0;
+                });
+                
+                const maxPoints = dim.questions.length * 2;
+                const percentage = (points / maxPoints) * 100;
+                
+                let status = 'red';
+                if (percentage >= 75) status = 'green';
+                else if (percentage >= 50) status = 'yellow';
+                
+                return {
+                  name: dim.name,
+                  icon: dim.icon,
+                  subtitle: dim.subtitle,
+                  points: points,
+                  maxPoints: maxPoints,
+                  percentage: Math.round(percentage),
+                  status: status,
+                  isBonus: false
+                };
               }
+            });
+
+            // Count green statuses
+            const greenCount = dimensionResults.filter(d => d.status === 'green').length;
+            
+            // Overall interpretation
+            let overall = {
+              badge: "💪 Zeit zu starten",
+              level: "Zeit zu starten",
+              description: "Die beste Zeit, zukunftsfitter zu werden, ist jetzt! Lasst uns loslegen.",
+              color: "red"
+            };
+            
+            if (greenCount >= 4) {
+              overall = {
+                badge: "🚀 Zukunftsfit!",
+                level: "Zukunftsfit",
+                description: "Ihr sprecht nicht nur über Zukunft, ihr gestaltet sie aktiv. Weiter so!",
+                color: "green"
+              };
+            } else if (greenCount >= 2) {
+              overall = {
+                badge: "⚙️ Auf gutem Weg",
+                level: "Auf gutem Weg",
+                description: "Das Bewusstsein ist da – jetzt braucht es mehr Konsequenz im Handeln.",
+                color: "yellow"
+              };
+            }
+
+            // Calculate total points for the 4 main dimensions
+            const totalPoints = dimensionResults
+              .filter(d => !d.isBonus)
+              .reduce((sum, d) => sum + d.points, 0);
+            const maxTotalPoints = 16;
+            const overallPercentage = Math.round((totalPoints / maxTotalPoints) * 100);
+
+            return {
+              dimensionResults,
+              overall,
+              totalPoints,
+              maxTotalPoints,
+              overallPercentage,
+              greenCount
+            };
+          };
+
+          const submitData = () => {
+            if (dataSubmitted) return;
+            
+            const results = calculateResults();
+            const timestamp = new Date().toISOString();
+            
+            // Prepare data
+            const data = {
+              timestamp: timestamp,
+              email: '',
+              assessmentType: 'Zukunftsfitness',
+              overallStatus: results.overall.level,
+              overallPoints: results.totalPoints,
+              overallPercentage: results.overallPercentage,
+              greenCount: results.greenCount
+            };
+
+            // Add dimension scores
+            results.dimensionResults.forEach((dim, idx) => {
+              data[`dim${idx}_name`] = dim.name;
+              data[`dim${idx}_status`] = dim.status;
+              if (!dim.isBonus) {
+                data[`dim${idx}_points`] = dim.points;
+                data[`dim${idx}_percentage`] = dim.percentage;
+              }
+            });
+
+            // Add all individual answers
+            Object.keys(answers).forEach(key => {
+              const answer = answers[key];
+              if (answer.text) {
+                data[`answer_${key}`] = answer.text;
+              } else {
+                data[`answer_${key}`] = `${answer.text || ''} (${answer.value || 0} Punkte)`;
+              }
+            });
+
+            // Send to Google Sheets
+            const params = new URLSearchParams(data);
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = scriptURL;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => document.body.removeChild(iframe), 3000);
+            setDataSubmitted(true);
+          };
+
+          const handleEmailSubmit = (e) => {
+            e.preventDefault();
+            if (!email || !email.includes('@')) return;
+
+            // Send email update to Google Sheets
+            const timestamp = new Date().toISOString();
+            const params = new URLSearchParams({
+              timestamp: timestamp,
+              email: email,
+              emailUpdate: 'true'
+            });
+            
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
+            
+            if (formRef.current) {
+              const ts = document.querySelector('input[name="timestamp"]');
+              if (ts) ts.value = timestamp;
+              
+              setTimeout(() => {
+                formRef.current.submit();
+                setTimeout(() => setEmailSubmitted(true), 1000);
+              }, 100);
             }
           };
 
-          const correct = answers.filter(a => a.selected === a.correct).length;
-          const score = Math.round((correct / quiz.questions.length) * 100);
+          const getStatusColor = (status) => {
+            if (status === 'green') return 'bg-green-500';
+            if (status === 'yellow') return 'bg-yellow-500';
+            return 'bg-red-500';
+          };
 
+          const getStatusEmoji = (status) => {
+            if (status === 'green') return '🟢';
+            if (status === 'yellow') return '🟡';
+            return '🔴';
+          };
+
+          // Start Screen
           if (screen === 'start') {
             return (
-              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12 text-center">
-                  <div className="text-6xl mb-6">🏆</div>
-                  <h1 className="text-4xl font-bold text-gray-800 mb-4">{quiz.title}</h1>
-                  <p className="text-xl text-gray-600 mb-8">{quiz.desc}</p>
-                  <div className="bg-orange-50 rounded-lg p-6 mb-8">
-                    <p className="text-lg"><strong>{quiz.questions.length} Fragen</strong> warten auf dich!</p>
+              <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+                  <div className="text-center mb-8">
+                    <div className="text-7xl mb-6">🧭</div>
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">{assessment.title}</h1>
+                    <h2 className="text-3xl md:text-4xl font-bold text-brand-600 mb-6">{assessment.subtitle}</h2>
+                    <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">{assessment.description}</p>
                   </div>
-                  <button onClick={() => setScreen('quiz')} className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-8 py-4 rounded-lg text-lg">
-                    Quiz starten
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+                    {assessment.dimensions.map((dim, idx) => (
+                      <div key={idx} className={`rounded-xl p-6 border-2 ${dim.isBonus ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 md:col-span-2 lg:col-span-3' : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'}`}>
+                        <div className="text-4xl mb-3">{dim.icon}</div>
+                        <h3 className="font-bold text-lg text-gray-900 mb-1">{dim.name}</h3>
+                        <p className="text-sm text-gray-600">{dim.subtitle}</p>
+                        {dim.isBonus && <p className="text-xs text-purple-600 font-semibold mt-2">Bonus: Persönlicher KI-Check</p>}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">⏱️</span>
+                      <div>
+                        <p className="font-semibold text-gray-900 mb-2">Ca. 3 Minuten · 10 Fragen</p>
+                        <p className="text-gray-700">Ehrliche Selbstreflexion für maximalen Erkenntnisgewinn</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setScreen('assessment')} 
+                    className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-10 py-5 rounded-xl text-xl shadow-lg transition-all transform hover:scale-105"
+                  >
+                    Check starten
                   </button>
                 </div>
               </div>
             );
           }
 
-          if (screen === 'quiz') {
-            const q = quiz.questions[currentQ];
+          // Assessment Screen
+          if (screen === 'assessment') {
+            const dim = assessment.dimensions[currentDimension];
+            const isKIQuestion = dim.isBonus;
+            const totalQuestions = getTotalQuestions();
+            const currentOverallQuestion = assessment.dimensions.slice(0, currentDimension).reduce((sum, d) => {
+              return sum + (Array.isArray(d.questions[0]) ? d.questions.length : d.questions.length);
+            }, 0) + currentQuestion + 1;
+            const progress = (currentOverallQuestion / totalQuestions) * 100;
+
             return (
-              <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
-                <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12">
-                  <div className="mb-6">
-                    <p className="text-sm font-semibold text-orange-600 mb-4">Frage {currentQ + 1} von {quiz.questions.length}</p>
-                    <h2 className="text-3xl font-bold text-gray-800 mb-8">{q.q}</h2>
+              <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4">
+                <div className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+                  {/* Progress */}
+                  <div className="mb-8">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-semibold text-gray-600">
+                        Dimension {currentDimension + 1} von {assessment.dimensions.length}: {dim.name}
+                      </span>
+                      <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div className="bg-brand-600 h-3 rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div>
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    {q.opts.map((opt, idx) => (
-                      <button key={idx} onClick={() => handleAnswer(idx)} className="w-full text-left p-5 rounded-lg border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all">
-                        <span className="inline-block w-8 h-8 rounded-full bg-orange-100 text-orange-600 text-center leading-8 mr-4 font-semibold">
-                          {String.fromCharCode(65 + idx)}
-                        </span>
-                        {opt}
-                      </button>
-                    ))}
+
+                  {/* Instruction (only for first question) */}
+                  {currentDimension === 0 && currentQuestion === 0 && (
+                    <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
+                      <div className="flex items-start gap-3">
+                        <span className="text-3xl">💼</span>
+                        <div>
+                          <p className="font-bold text-gray-900 mb-2">{assessment.instruction}</p>
+                          <ul className="space-y-1 text-gray-700">
+                            {assessment.instructionPoints.map((point, idx) => (
+                              <li key={idx} className="text-sm">• {point}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* KI Bonus Instruction */}
+                  {dim.isBonus && currentQuestion === 0 && (
+                    <div className="bg-purple-50 rounded-xl p-6 mb-8 border-2 border-purple-200">
+                      <div className="flex items-start gap-3">
+                        <span className="text-3xl">🤖</span>
+                        <div>
+                          <p className="font-bold text-gray-900">{dim.bonusText}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dimension Header */}
+                  <div className="text-center mb-8">
+                    <div className="text-6xl mb-4">{dim.icon}</div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{dim.name}</h2>
+                    <p className="text-lg text-gray-600 italic">"{dim.subtitle}"</p>
+                  </div>
+
+                  {/* Question */}
+                  <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                    <p className="text-sm text-gray-500 mb-3">
+                      Frage {currentQuestion + 1} von {Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length}
+                    </p>
+                    <p className="text-xl font-semibold text-gray-900 leading-relaxed">
+                      {isKIQuestion ? dim.questions[currentQuestion].text : dim.questions[currentQuestion]}
+                    </p>
+                  </div>
+
+                  {/* Answer Options */}
+                  <div className="space-y-3">
+                    {isKIQuestion ? (
+                      // KI Questions with custom options
+                      dim.questions[currentQuestion].options.map((option, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleAnswer(option)}
+                          className="w-full text-left p-5 rounded-xl border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all duration-200 transform hover:scale-102"
+                        >
+                          <span className="text-lg font-medium text-gray-900">{option.text}</span>
+                        </button>
+                      ))
+                    ) : (
+                      // Standard questions with standard options
+                      assessment.standardOptions.map((option, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleAnswer(option)}
+                          className="w-full text-left p-5 rounded-xl border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all duration-200 transform hover:scale-102"
+                        >
+                          <span className="text-lg font-medium text-gray-900">{option.text}</span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             );
           }
 
+          // Results Screen
+          const results = calculateResults();
+
           return (
-            <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
-              <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-12">
-                <div className="text-center mb-8">
-                  <div className="text-6xl mb-6">{score >= 80 ? '🎉' : score >= 60 ? '👍' : '💪'}</div>
-                  <h2 className="text-4xl font-bold mb-4">Dein Ergebnis: {score}%</h2>
-                  <p className="text-xl text-gray-600">{correct} von {quiz.questions.length} Fragen richtig!</p>
+            <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4 py-12">
+              <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+                {/* Overall Result */}
+                <div className="text-center mb-12">
+                  <div className="text-7xl mb-6">📊</div>
+                  <h2 className="text-4xl font-bold text-gray-900 mb-4">Ihre Zukunftsfitness-Analyse</h2>
+                  
+                  <div className={`inline-block px-8 py-4 rounded-2xl mb-6 ${
+                    results.overall.color === 'green' ? 'bg-green-100 border-2 border-green-300' :
+                    results.overall.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-300' :
+                    'bg-red-100 border-2 border-red-300'
+                  }`}>
+                    <p className="text-4xl font-bold mb-1">{results.overall.badge}</p>
+                  </div>
+                  
+                  <p className="text-xl text-gray-700 mb-6 max-w-2xl mx-auto leading-relaxed">
+                    {results.overall.description}
+                  </p>
+                  
+                  <div className="bg-gray-50 rounded-xl p-5 inline-block">
+                    <p className="text-3xl font-bold text-brand-600">{results.overallPercentage}%</p>
+                    <p className="text-sm text-gray-600">{results.totalPoints} von {results.maxTotalPoints} Punkten</p>
+                  </div>
                 </div>
 
-                {!submitted ? (
-                  <div className="bg-orange-50 rounded-lg p-6 mb-6">
-                    <div className="text-center mb-4">
-                      <span className="text-2xl">📧</span>
-                      <h3 className="text-lg font-semibold mt-2">Bleib informiert!</h3>
+                {/* Dimension Results */}
+                <div className="space-y-4 mb-12">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">📊 Ihre Bereiche im Detail:</h3>
+                  
+                  {results.dimensionResults.map((dimResult, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-xl p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4 flex-1">
+                          <span className="text-4xl">{dimResult.icon}</span>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg text-gray-900">{dimResult.name}</h4>
+                            <p className="text-sm text-gray-600">{dimResult.subtitle}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {!dimResult.isBonus && (
+                            <div className="text-right mr-4">
+                              <p className="text-2xl font-bold text-brand-600">{dimResult.percentage}%</p>
+                              <p className="text-xs text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
+                            </div>
+                          )}
+                          <div className={`w-12 h-12 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center`}>
+                            <span className="text-2xl">{getStatusEmoji(dimResult.status)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      {!dimResult.isBonus && (
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              dimResult.status === 'green' ? 'bg-green-500' :
+                              dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{width: `${dimResult.percentage}%`}}
+                          ></div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-center mb-4">Möchtest du mehr über KI erfahren? Hinterlasse deine Email!</p>
+                  ))}
+                </div>
+
+                {/* Email Collection */}
+                {!emailSubmitted ? (
+                  <div className="bg-gradient-to-br from-brand-50 to-amber-50 rounded-2xl p-8 mb-6 border-2 border-brand-200">
+                    <div className="text-center mb-6">
+                      <span className="text-5xl mb-4 block">🤖✨</span>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Sie möchten KI-fit werden aber haben kaum Zeit?</h3>
+                      <p className="text-gray-700 leading-relaxed text-lg">
+                        Ab 2026 führe ich ein neues <strong>exklusives Format für Top-Führungskräfte</strong> ein! 
+                        100% individuell und daher nur mit <strong>limitierten Plätzen</strong>. 
+                      </p>
+                      <p className="text-gray-700 leading-relaxed text-lg mt-3">
+                        <strong>Neugierig?</strong> Lassen Sie ihre E-Mail Adresse da und Sie erfahren als eine:r der ersten wenn es losgeht!
+                      </p>
+                    </div>
                     
-                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec" method="GET" target="hidden_iframe" onSubmit={handleSubmit}>
-                      <input type="hidden" name="score" value={score} />
-                      <input type="hidden" name="correctAnswers" value={correct} />
-                      <input type="hidden" name="totalQuestions" value={quiz.questions.length} />
+                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec" method="GET" target="hidden_iframe" onSubmit={handleEmailSubmit}>
                       <input type="hidden" name="timestamp" value="" />
+                      <input type="hidden" name="emailUpdate" value="true" />
                       
-                      <div className="flex gap-3">
-                        <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="deine@email.com" className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-orange-500 focus:outline-none" required />
-                        <button type="submit" className="bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-3 rounded-lg">
-                          Absenden
+                      <div className="flex flex-col md:flex-row gap-3">
+                        <input 
+                          type="email" 
+                          name="email" 
+                          value={email} 
+                          onChange={(e) => setEmail(e.target.value)} 
+                          placeholder="ihre@email.com" 
+                          className="flex-1 px-6 py-4 rounded-xl border-2 border-brand-300 focus:border-brand-500 focus:outline-none text-lg" 
+                          required 
+                        />
+                        <button 
+                          type="submit" 
+                          className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-4 rounded-xl text-lg shadow-lg transition-all transform hover:scale-105"
+                        >
+                          Ja, ich bin dabei!
                         </button>
                       </div>
+                      <p className="text-xs text-gray-600 mt-4 text-center">
+                        Ihre Daten werden vertraulich behandelt und nur für Updates zum KI-Mentoring verwendet.
+                      </p>
                     </form>
                     <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
                   </div>
                 ) : (
-                  <div className="bg-green-50 rounded-lg p-6 mb-6 text-center">
-                    <span className="text-3xl">✅</span>
-                    <p className="text-green-800 font-semibold mt-2">Vielen Dank! Wir haben deine Email erhalten.</p>
+                  <div className="bg-green-50 rounded-2xl p-8 mb-6 text-center border-2 border-green-200">
+                    <span className="text-6xl mb-4 block">✅</span>
+                    <h3 className="text-2xl font-bold text-green-900 mb-3">Vielen Dank!</h3>
+                    <p className="text-green-800 text-lg">
+                      Sie erhalten als eine:r der ersten Zugang zum exklusiven KI-Mentoring, sobald es 2026 startet.
+                    </p>
                   </div>
                 )}
 
-                <button onClick={() => { setScreen('start'); setCurrentQ(0); setAnswers([]); setEmail(''); setSubmitted(false); }} className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-8 py-4 rounded-lg">
-                  Quiz nochmal machen
-                </button>
+                <div className="text-center pt-6 border-t-2 border-gray-200">
+                  <p className="text-sm text-gray-600">
+                    Entwickelt von <strong className="text-brand-600">Barbora Dörflinger</strong> · <a href="https://zukunftsfit.jetzt" className="text-brand-600 hover:underline font-semibold">zukunftsfit.jetzt</a>
+                  </p>
+                </div>
               </div>
             </div>
           );
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<Quiz />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<ZukunftsfitnesCheck />);
     </script>
 </body>
 </html>
