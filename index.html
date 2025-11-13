@@ -44,7 +44,7 @@
           const assessment = {
             title: "Der 3-Minuten-Zukunftsfitness Check:",
             subtitle: "Wie fit ist eure Organisation?",
-            description: "Nicht auf dem Papier, sondern in eurem Alltag. Dieses Mini-Quiz zeigt, wie oft Zukunft wirklich mit am Tisch sitzt – und ob aus guten Fragen auch Handlungen folgen.",
+            description: "Nicht auf dem Papier, sondern in eurem Alltag. Dieses Mini-Quiz zeigt, wie oft Zukunft wirklich mit am Tisch sitzt – und ob sie mitentscheidet!",
             instruction: "Denkt an eure letzten 3-5 Meetings oder Entscheidungsrunden:",
             instructionPoints: [
               "Wurden Fragen dieser Art von euch oder jemandem in der Runde gefragt?",
@@ -118,9 +118,9 @@
               }
             ],
             standardOptions: [
-              { text: "🟢 Ja – gefragt und gehandelt", value: 2, color: "green" },
-              { text: "🟡 Ja – gefragt, aber...", value: 1, color: "yellow" },
-              { text: "🔴 Nein – kam nicht vor", value: 0, color: "red" }
+              { text: "Ja - dieses Thema haben wir diskutiert UND entsprechende Maßnahmen umgesetzt", value: 2, color: "green" },
+              { text: "Ja - aber es ist bei Diskussion geblieben", value: 1, color: "yellow" },
+              { text: "Nein - das Thema kam nicht auf", value: 0, color: "red" }
             ]
           };
 
@@ -248,10 +248,10 @@
             const results = calculateResults();
             const timestamp = new Date().toISOString();
             
-            // Prepare data
-            const data = {
+            // Build data object with all information
+            const dataToSend = {
               timestamp: timestamp,
-              email: '',
+              email: email || 'nicht_angegeben',
               assessmentType: 'Zukunftsfitness',
               overallStatus: results.overall.level,
               overallPoints: results.totalPoints,
@@ -259,60 +259,90 @@
               greenCount: results.greenCount
             };
 
-            // Add dimension scores
+            // Add dimension results
             results.dimensionResults.forEach((dim, idx) => {
-              data[`dim${idx}_name`] = dim.name;
-              data[`dim${idx}_status`] = dim.status;
+              dataToSend[`dim${idx}_name`] = dim.name;
+              dataToSend[`dim${idx}_status`] = dim.status;
               if (!dim.isBonus) {
-                data[`dim${idx}_points`] = dim.points;
-                data[`dim${idx}_percentage`] = dim.percentage;
+                dataToSend[`dim${idx}_points`] = dim.points;
+                dataToSend[`dim${idx}_percentage`] = dim.percentage;
               }
             });
 
-            // Add all individual answers
+            // Add all individual answers with full text
             Object.keys(answers).forEach(key => {
               const answer = answers[key];
               if (answer.text) {
-                data[`answer_${key}`] = answer.text;
+                dataToSend[`answer_${key}`] = answer.text;
+              } else if (answer.value !== undefined) {
+                dataToSend[`answer_${key}`] = `${answer.text || ''} (${answer.value} Punkte)`;
               } else {
-                data[`answer_${key}`] = `${answer.text || ''} (${answer.value || 0} Punkte)`;
+                dataToSend[`answer_${key}`] = 'Keine Antwort';
               }
             });
 
-            // Send to Google Sheets
-            const params = new URLSearchParams(data);
+            // Build URL with all parameters
+            const params = new URLSearchParams(dataToSend);
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
             
+            console.log('Sending data to Google Sheets:', dataToSend);
+            console.log('Full URL:', scriptURL);
+            
+            // Create and load iframe
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
+            iframe.name = 'data_submit_iframe';
             iframe.src = scriptURL;
             document.body.appendChild(iframe);
             
-            setTimeout(() => document.body.removeChild(iframe), 3000);
+            // Remove iframe after delay
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 5000);
+            
             setDataSubmitted(true);
+            console.log('Data submission complete');
           };
 
           const handleEmailSubmit = (e) => {
             e.preventDefault();
             if (!email || !email.includes('@')) return;
 
-            // Send email update to Google Sheets
             const timestamp = new Date().toISOString();
-            const params = new URLSearchParams({
+            
+            // Send email as separate submission
+            const emailData = {
               timestamp: timestamp,
               email: email,
-              emailUpdate: 'true'
-            });
+              emailOnly: 'true',
+              assessmentType: 'Zukunftsfitness'
+            };
             
+            const params = new URLSearchParams(emailData);
             const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
+            
+            console.log('Sending email to Google Sheets:', email);
             
             if (formRef.current) {
               const ts = document.querySelector('input[name="timestamp"]');
               if (ts) ts.value = timestamp;
               
               setTimeout(() => {
-                formRef.current.submit();
-                setTimeout(() => setEmailSubmitted(true), 1000);
+                // Use iframe to submit
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.name = 'email_submit_iframe';
+                iframe.src = scriptURL;
+                document.body.appendChild(iframe);
+                
+                setTimeout(() => {
+                  if (document.body.contains(iframe)) {
+                    document.body.removeChild(iframe);
+                  }
+                  setEmailSubmitted(true);
+                }, 2000);
               }, 100);
             }
           };
@@ -341,15 +371,18 @@
                     <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">{assessment.description}</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-                    {assessment.dimensions.map((dim, idx) => (
-                      <div key={idx} className={`rounded-xl p-6 border-2 ${dim.isBonus ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 md:col-span-2 lg:col-span-3' : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'}`}>
-                        <div className="text-4xl mb-3">{dim.icon}</div>
-                        <h3 className="font-bold text-lg text-gray-900 mb-1">{dim.name}</h3>
-                        <p className="text-sm text-gray-600">{dim.subtitle}</p>
-                        {dim.isBonus && <p className="text-xs text-purple-600 font-semibold mt-2">Bonus: Persönlicher KI-Check</p>}
+                  <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">💼</span>
+                      <div>
+                        <p className="font-bold text-gray-900 mb-2">Denkt bei den folgenden Fragen an eure letzten 3-5 Meetings oder Entscheidungsrunden:</p>
+                        <ul className="space-y-1 text-gray-700">
+                          {assessment.instructionPoints.map((point, idx) => (
+                            <li key={idx} className="text-sm">• {point}</li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
+                    </div>
                   </div>
 
                   <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
@@ -390,7 +423,7 @@
                   <div className="mb-8">
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-sm font-semibold text-gray-600">
-                        Dimension {currentDimension + 1} von {assessment.dimensions.length}: {dim.name}
+                        {dim.name}
                       </span>
                       <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
                     </div>
@@ -399,24 +432,7 @@
                     </div>
                   </div>
 
-                  {/* Instruction (only for first question) */}
-                  {currentDimension === 0 && currentQuestion === 0 && (
-                    <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
-                      <div className="flex items-start gap-3">
-                        <span className="text-3xl">💼</span>
-                        <div>
-                          <p className="font-bold text-gray-900 mb-2">{assessment.instruction}</p>
-                          <ul className="space-y-1 text-gray-700">
-                            {assessment.instructionPoints.map((point, idx) => (
-                              <li key={idx} className="text-sm">• {point}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* KI Bonus Instruction */}
+                  {/* KI Bonus Instruction - only for KI questions */}
                   {dim.isBonus && currentQuestion === 0 && (
                     <div className="bg-purple-50 rounded-xl p-6 mb-8 border-2 border-purple-200">
                       <div className="flex items-start gap-3">
@@ -428,20 +444,30 @@
                     </div>
                   )}
 
-                  {/* Dimension Header */}
+                  {/* Main Question - for non-KI questions */}
+                  {!isKIQuestion && (
+                    <div className="text-center mb-6">
+                      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                        Wurde diese oder eine ähnliche Frage in ihren letzten wichtigen Meetings diskutiert?
+                      </h2>
+                    </div>
+                  )}
+
+                  {/* Question Number - prominent */}
                   <div className="text-center mb-8">
-                    <div className="text-6xl mb-4">{dim.icon}</div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{dim.name}</h2>
-                    <p className="text-lg text-gray-600 italic">"{dim.subtitle}"</p>
+                    <p className="text-5xl font-bold text-brand-600 mb-6">
+                      {currentOverallQuestion}/10
+                    </p>
                   </div>
 
-                  {/* Question */}
+                  {/* Actual Question */}
                   <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                    <p className="text-sm text-gray-500 mb-3">
-                      Frage {currentQuestion + 1} von {Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length}
-                    </p>
-                    <p className="text-xl font-semibold text-gray-900 leading-relaxed">
-                      {isKIQuestion ? dim.questions[currentQuestion].text : dim.questions[currentQuestion]}
+                    <p className="text-xl md:text-2xl text-gray-900 leading-relaxed text-center">
+                      {isKIQuestion ? (
+                        <span className="font-semibold">{dim.questions[currentQuestion].text}</span>
+                      ) : (
+                        <span className="italic">"{dim.questions[currentQuestion]}"</span>
+                      )}
                     </p>
                   </div>
 
@@ -480,61 +506,61 @@
           const results = calculateResults();
 
           return (
-            <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4 py-12">
-              <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4 py-8">
+              <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10">
                 {/* Overall Result */}
-                <div className="text-center mb-12">
-                  <div className="text-7xl mb-6">📊</div>
-                  <h2 className="text-4xl font-bold text-gray-900 mb-4">Ihre Zukunftsfitness-Analyse</h2>
+                <div className="text-center mb-8">
+                  <div className="text-5xl mb-4">📊</div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-3">Ihre Zukunftsfitness-Analyse</h2>
                   
-                  <div className={`inline-block px-8 py-4 rounded-2xl mb-6 ${
+                  <div className={`inline-block px-6 py-3 rounded-2xl mb-4 ${
                     results.overall.color === 'green' ? 'bg-green-100 border-2 border-green-300' :
                     results.overall.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-300' :
                     'bg-red-100 border-2 border-red-300'
                   }`}>
-                    <p className="text-4xl font-bold mb-1">{results.overall.badge}</p>
+                    <p className="text-2xl font-bold">{results.overall.badge}</p>
                   </div>
                   
-                  <p className="text-xl text-gray-700 mb-6 max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-lg text-gray-700 mb-4 max-w-2xl mx-auto leading-relaxed">
                     {results.overall.description}
                   </p>
                   
-                  <div className="bg-gray-50 rounded-xl p-5 inline-block">
-                    <p className="text-3xl font-bold text-brand-600">{results.overallPercentage}%</p>
-                    <p className="text-sm text-gray-600">{results.totalPoints} von {results.maxTotalPoints} Punkten</p>
+                  <div className="bg-gray-50 rounded-xl p-4 inline-block">
+                    <p className="text-2xl font-bold text-brand-600">{results.overallPercentage}%</p>
+                    <p className="text-xs text-gray-600">{results.totalPoints} von {results.maxTotalPoints} Punkten</p>
                   </div>
                 </div>
 
                 {/* Dimension Results */}
-                <div className="space-y-4 mb-12">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">📊 Ihre Bereiche im Detail:</h3>
+                <div className="space-y-3 mb-8">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Ihre Bereiche im Detail:</h3>
                   
                   {results.dimensionResults.map((dimResult, idx) => (
-                    <div key={idx} className="bg-gray-50 rounded-xl p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-4 flex-1">
-                          <span className="text-4xl">{dimResult.icon}</span>
+                    <div key={idx} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3 flex-1">
+                          <span className="text-3xl">{dimResult.icon}</span>
                           <div className="flex-1">
-                            <h4 className="font-bold text-lg text-gray-900">{dimResult.name}</h4>
-                            <p className="text-sm text-gray-600">{dimResult.subtitle}</p>
+                            <h4 className="font-bold text-base text-gray-900">{dimResult.name}</h4>
+                            <p className="text-xs text-gray-600">{dimResult.subtitle}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
                           {!dimResult.isBonus && (
-                            <div className="text-right mr-4">
-                              <p className="text-2xl font-bold text-brand-600">{dimResult.percentage}%</p>
+                            <div className="text-right mr-3">
+                              <p className="text-xl font-bold text-brand-600">{dimResult.percentage}%</p>
                               <p className="text-xs text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
                             </div>
                           )}
-                          <div className={`w-12 h-12 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center`}>
-                            <span className="text-2xl">{getStatusEmoji(dimResult.status)}</span>
+                          <div className={`w-10 h-10 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center`}>
+                            <span className="text-xl">{getStatusEmoji(dimResult.status)}</span>
                           </div>
                         </div>
                       </div>
                       {!dimResult.isBonus && (
-                        <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
-                            className={`h-3 rounded-full transition-all duration-500 ${
+                            className={`h-2 rounded-full transition-all duration-500 ${
                               dimResult.status === 'green' ? 'bg-green-500' :
                               dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
@@ -548,16 +574,18 @@
 
                 {/* Email Collection */}
                 {!emailSubmitted ? (
-                  <div className="bg-gradient-to-br from-brand-50 to-amber-50 rounded-2xl p-8 mb-6 border-2 border-brand-200">
+                  <div className="bg-gradient-to-br from-brand-50 to-amber-50 rounded-2xl p-6 mb-6 border-2 border-brand-200">
                     <div className="text-center mb-6">
-                      <span className="text-5xl mb-4 block">🤖✨</span>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Sie möchten KI-fit werden aber haben kaum Zeit?</h3>
-                      <p className="text-gray-700 leading-relaxed text-lg">
-                        Ab 2026 führe ich ein neues <strong>exklusives Format für Top-Führungskräfte</strong> ein! 
-                        100% individuell und daher nur mit <strong>limitierten Plätzen</strong>. 
+                      <span className="text-4xl mb-3 block">🤖✨</span>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Sie möchten KI-fit werden aber haben kaum Zeit?</h3>
+                      <p className="text-gray-700 leading-relaxed text-base mb-2">
+                        Ab 2026 führe ich ein neues <strong>exklusives Format für Top-Führungskräfte</strong> ein!
                       </p>
-                      <p className="text-gray-700 leading-relaxed text-lg mt-3">
-                        <strong>Neugierig?</strong> Lassen Sie ihre E-Mail Adresse da und Sie erfahren als eine:r der ersten wenn es losgeht!
+                      <p className="text-gray-700 leading-relaxed text-base mb-3">
+                        <strong>100% individuell</strong> und daher nur mit <strong>limitierten Plätzen</strong>.
+                      </p>
+                      <p className="text-gray-700 leading-relaxed text-base">
+                        <strong>Neugierig?</strong> Lassen Sie ihre E-Mail Adresse da und Sie erfahren als erster, wenn die Anmeldung startet!
                       </p>
                     </div>
                     
@@ -577,23 +605,26 @@
                         />
                         <button 
                           type="submit" 
-                          className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-4 rounded-xl text-lg shadow-lg transition-all transform hover:scale-105"
+                          className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-4 rounded-xl text-lg shadow-lg transition-all transform hover:scale-105 whitespace-nowrap"
                         >
-                          Ja, ich bin dabei!
+                          Ja, ich will mehr erfahren!
                         </button>
                       </div>
-                      <p className="text-xs text-gray-600 mt-4 text-center">
-                        Ihre Daten werden vertraulich behandelt und nur für Updates zum KI-Mentoring verwendet.
+                      <p className="text-xs text-gray-600 mt-3 text-center">
+                        Ihre Daten werden vertraulich behandelt und nur für Updates zum neuen KI-Format verwendet.
                       </p>
                     </form>
                     <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
                   </div>
                 ) : (
-                  <div className="bg-green-50 rounded-2xl p-8 mb-6 text-center border-2 border-green-200">
-                    <span className="text-6xl mb-4 block">✅</span>
-                    <h3 className="text-2xl font-bold text-green-900 mb-3">Vielen Dank!</h3>
-                    <p className="text-green-800 text-lg">
-                      Sie erhalten als eine:r der ersten Zugang zum exklusiven KI-Mentoring, sobald es 2026 startet.
+                  <div className="bg-green-50 rounded-2xl p-6 mb-6 text-center border-2 border-green-200">
+                    <span className="text-5xl mb-3 block">✅</span>
+                    <h3 className="text-xl font-bold text-green-900 mb-2">Vielen Dank!</h3>
+                    <p className="text-green-800 text-base mb-2">
+                      Sie erhalten als einer der ersten eine Information, sobald eine Anmeldung möglich ist.
+                    </p>
+                    <p className="text-green-800 text-base">
+                      Wenn Sie nicht so lange warten wollen, melden Sie sich jederzeit: <a href="mailto:barbora@zukunftsfit.jetzt" className="font-semibold underline">barbora@zukunftsfit.jetzt</a>
                     </p>
                   </div>
                 )}
