@@ -98,21 +98,21 @@
                   {
                     text: "Wie häufig nutzen Sie persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
                     options: [
-                      { text: "Mehrmals täglich", color: "green" },
-                      { text: "Mehrmals wöchentlich", color: "green" },
-                      { text: "Mehrmals monatlich", color: "yellow" },
-                      { text: "Selten", color: "red" },
-                      { text: "Ich nutze kaum KI Tools", color: "red" }
+                      { text: "Mehrmals täglich", value: 2, color: "green" },
+                      { text: "Mehrmals wöchentlich", value: 1, color: "green" },
+                      { text: "Mehrmals monatlich", value: 1, color: "yellow" },
+                      { text: "Selten", value: 0, color: "red" },
+                      { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
                     ]
                   },
                   {
                     text: "Wann haben Sie zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das Sie vorher noch nie genutzt haben?",
                     options: [
-                      { text: "Heute", color: "green" },
-                      { text: "In den letzten Tagen", color: "green" },
-                      { text: "Im letzten Monat", color: "yellow" },
-                      { text: "Dieses Jahr", color: "red" },
-                      { text: "Ich nutze kaum KI Tools", color: "red" }
+                      { text: "Heute", value: 2, color: "green" },
+                      { text: "In den letzten Tagen", value: 2, color: "green" },
+                      { text: "Im letzten Monat", value: 1, color: "yellow" },
+                      { text: "Dieses Jahr", value: 0, color: "red" },
+                      { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
                     ]
                   }
                 ]
@@ -135,7 +135,9 @@
             const dim = assessment.dimensions[currentDimension];
             const questionKey = `dim${currentDimension}_q${currentQuestion}`;
             
-            setAnswers({...answers, [questionKey]: answer});
+            // Create updated answers object with the current answer
+            const updatedAnswers = {...answers, [questionKey]: answer};
+            setAnswers(updatedAnswers);
 
             // Check if we need to move to next question or dimension
             const questionsInDim = Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length;
@@ -146,36 +148,47 @@
               setCurrentDimension(currentDimension + 1);
               setCurrentQuestion(0);
             } else {
-              // All questions answered - submit data and show results
-              submitData();
+              // All questions answered - submit data with complete answers and show results
+              submitData(updatedAnswers);
               setScreen('results');
             }
           };
 
-          const calculateResults = () => {
+          const calculateResults = (answersToUse = answers) => {
             const dimensionResults = assessment.dimensions.map((dim, dimIdx) => {
               if (dim.isBonus) {
-                // KI Fitness - count colors
-                const q0Color = answers[`dim${dimIdx}_q0`]?.color || 'red';
-                const q1Color = answers[`dim${dimIdx}_q1`]?.color || 'red';
+                // KI Fitness - count both colors AND points
+                const q0Answer = answersToUse[`dim${dimIdx}_q0`];
+                const q1Answer = answersToUse[`dim${dimIdx}_q1`];
+                
+                const q0Color = q0Answer?.color || 'red';
+                const q1Color = q1Answer?.color || 'red';
+                const q0Points = q0Answer?.value || 0;
+                const q1Points = q1Answer?.value || 0;
+                
+                const points = q0Points + q1Points;
+                const maxPoints = 4; // 2 questions, 2 points each
+                const percentage = (points / maxPoints) * 100;
                 
                 let status = 'red';
-                if (q0Color === 'green' && q1Color === 'green') status = 'green';
-                else if (q0Color === 'green' || q1Color === 'green' || (q0Color === 'yellow' && q1Color === 'yellow')) status = 'yellow';
+                if (percentage >= 75) status = 'green';
+                else if (percentage >= 50) status = 'yellow';
                 
                 return {
                   name: dim.name,
                   icon: dim.icon,
                   subtitle: dim.subtitle,
                   status: status,
-                  points: null,
+                  points: points,
+                  maxPoints: maxPoints,
+                  percentage: Math.round(percentage),
                   isBonus: true
                 };
               } else {
                 // Regular dimensions - sum points
                 let points = 0;
                 dim.questions.forEach((_, qIdx) => {
-                  const answer = answers[`dim${dimIdx}_q${qIdx}`];
+                  const answer = answersToUse[`dim${dimIdx}_q${qIdx}`];
                   points += answer?.value || 0;
                 });
                 
@@ -226,11 +239,9 @@
               };
             }
 
-            // Calculate total points for the 4 main dimensions
-            const totalPoints = dimensionResults
-              .filter(d => !d.isBonus)
-              .reduce((sum, d) => sum + d.points, 0);
-            const maxTotalPoints = 16;
+            // Calculate total points for ALL dimensions including KI-Fitness
+            const totalPoints = dimensionResults.reduce((sum, d) => sum + d.points, 0);
+            const maxTotalPoints = 20; // 4 regular dimensions (16) + KI-Fitness (4)
             const overallPercentage = Math.round((totalPoints / maxTotalPoints) * 100);
 
             return {
@@ -243,10 +254,10 @@
             };
           };
 
-          const submitData = () => {
+          const submitData = (answersToSubmit = answers) => {
             if (dataSubmitted) return;
             
-            const results = calculateResults();
+            const results = calculateResults(answersToSubmit);
             const timestamp = new Date().toISOString();
             
             // WICHTIG: Timestamp speichern für späteren E-Mail-Update
@@ -264,7 +275,7 @@
               const dimIndex = Math.floor(i / 2);
               const questionIndex = i % 2;
               const answerKey = `dim${dimIndex}_q${questionIndex}`;
-              const answer = answers[answerKey];
+              const answer = answersToSubmit[answerKey];
               
               if (answer) {
                 dataToSend[`frage${i + 1}`] = answer.text || 'Keine Antwort';
@@ -275,7 +286,7 @@
 
             // Build URL with all parameters
             const params = new URLSearchParams(dataToSend);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec?' + params.toString();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
             
             console.log('=== SENDING DATA TO GOOGLE SHEETS ===');
             console.log('Data:', dataToSend);
@@ -316,7 +327,7 @@
             };
             
             const params = new URLSearchParams(emailData);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec?' + params.toString();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
             
             console.log('=== SENDING EMAIL UPDATE ===');
             console.log('Email:', email);
@@ -537,28 +548,24 @@
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {!dimResult.isBonus && (
-                            <div className="text-right mr-3">
-                              <p className="text-xl font-bold text-brand-600">{dimResult.percentage}%</p>
-                              <p className="text-xs text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
-                            </div>
-                          )}
+                          <div className="text-right mr-3">
+                            <p className="text-xl font-bold text-brand-600">{dimResult.percentage}%</p>
+                            <p className="text-xs text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
+                          </div>
                           <div className={`w-10 h-10 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center`}>
                             <span className="text-xl">{getStatusEmoji(dimResult.status)}</span>
                           </div>
                         </div>
                       </div>
-                      {!dimResult.isBonus && (
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-500 ${
-                              dimResult.status === 'green' ? 'bg-green-500' :
-                              dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{width: `${dimResult.percentage}%`}}
-                          ></div>
-                        </div>
-                      )}
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-500 ${
+                            dimResult.status === 'green' ? 'bg-green-500' :
+                            dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{width: `${dimResult.percentage}%`}}
+                        ></div>
+                      </div>
                     </div>
                   ))}
                 </div>
