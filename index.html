@@ -92,10 +92,10 @@
                 subtitle: "Persönliche Zukunftsfitness",
                 icon: "🤖",
                 isBonus: true,
-                bonusText: "Bonus Fragen zu KI - hier geht es nicht um ein Meeting sondern euren Alltag:",
+                bonusText: "Bonus Fragen zu KI - hier geht es nicht um ein Meeting sondern Ihren Alltag:",
                 questions: [
                   {
-                    text: "Wie häufig nutzt du persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
+                    text: "Wie häufig nutzen Sie persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
                     options: [
                       { text: "Mehrmals täglich", color: "green" },
                       { text: "Mehrmals wöchentlich", color: "green" },
@@ -105,7 +105,7 @@
                     ]
                   },
                   {
-                    text: "Wann hast du zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das du vorher noch nie genutzt hast?",
+                    text: "Wann haben Sie zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das Sie vorher noch nie genutzt haben?",
                     options: [
                       { text: "Heute", color: "green" },
                       { text: "In den letzten Tagen", color: "green" },
@@ -248,45 +248,34 @@
             const results = calculateResults();
             const timestamp = new Date().toISOString();
             
-            // Build data object with all information
+            // Build simple data object matching Excel structure
             const dataToSend = {
               timestamp: timestamp,
               email: email || 'nicht_angegeben',
-              assessmentType: 'Zukunftsfitness',
-              overallStatus: results.overall.level,
-              overallPoints: results.totalPoints,
-              overallPercentage: results.overallPercentage,
-              greenCount: results.greenCount
+              percentage: results.overallPercentage
             };
 
-            // Add dimension results
-            results.dimensionResults.forEach((dim, idx) => {
-              dataToSend[`dim${idx}_name`] = dim.name;
-              dataToSend[`dim${idx}_status`] = dim.status;
-              if (!dim.isBonus) {
-                dataToSend[`dim${idx}_points`] = dim.points;
-                dataToSend[`dim${idx}_percentage`] = dim.percentage;
-              }
-            });
-
-            // Add all individual answers with full text
-            Object.keys(answers).forEach(key => {
-              const answer = answers[key];
-              if (answer.text) {
-                dataToSend[`answer_${key}`] = answer.text;
-              } else if (answer.value !== undefined) {
-                dataToSend[`answer_${key}`] = `${answer.text || ''} (${answer.value} Punkte)`;
+            // Add all 10 answers as simple text (Frage 1 to Frage 10)
+            for (let i = 0; i < 10; i++) {
+              const dimIndex = Math.floor(i / 2);
+              const questionIndex = i % 2;
+              const answerKey = `dim${dimIndex}_q${questionIndex}`;
+              const answer = answers[answerKey];
+              
+              if (answer) {
+                dataToSend[`frage${i + 1}`] = answer.text || 'Keine Antwort';
               } else {
-                dataToSend[`answer_${key}`] = 'Keine Antwort';
+                dataToSend[`frage${i + 1}`] = 'Keine Antwort';
               }
-            });
+            }
 
             // Build URL with all parameters
             const params = new URLSearchParams(dataToSend);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec?' + params.toString();
             
-            console.log('Sending data to Google Sheets:', dataToSend);
-            console.log('Full URL:', scriptURL);
+            console.log('=== SENDING DATA TO GOOGLE SHEETS ===');
+            console.log('Data:', dataToSend);
+            console.log('URL length:', scriptURL.length);
             
             // Create and load iframe
             const iframe = document.createElement('iframe');
@@ -300,10 +289,10 @@
               if (document.body.contains(iframe)) {
                 document.body.removeChild(iframe);
               }
+              console.log('=== DATA SUBMISSION COMPLETE ===');
             }, 5000);
             
             setDataSubmitted(true);
-            console.log('Data submission complete');
           };
 
           const handleEmailSubmit = (e) => {
@@ -312,39 +301,33 @@
 
             const timestamp = new Date().toISOString();
             
-            // Send email as separate submission
+            // Send email update - will be matched with timestamp in Google Sheets
             const emailData = {
               timestamp: timestamp,
               email: email,
-              emailOnly: 'true',
-              assessmentType: 'Zukunftsfitness'
+              emailOnly: 'true'
             };
             
             const params = new URLSearchParams(emailData);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec?' + params.toString();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec?' + params.toString();
             
-            console.log('Sending email to Google Sheets:', email);
+            console.log('=== SENDING EMAIL UPDATE ===');
+            console.log('Email:', email);
             
-            if (formRef.current) {
-              const ts = document.querySelector('input[name="timestamp"]');
-              if (ts) ts.value = timestamp;
-              
-              setTimeout(() => {
-                // Use iframe to submit
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.name = 'email_submit_iframe';
-                iframe.src = scriptURL;
-                document.body.appendChild(iframe);
-                
-                setTimeout(() => {
-                  if (document.body.contains(iframe)) {
-                    document.body.removeChild(iframe);
-                  }
-                  setEmailSubmitted(true);
-                }, 2000);
-              }, 100);
-            }
+            // Use iframe to submit
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'email_submit_iframe';
+            iframe.src = scriptURL;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+              console.log('=== EMAIL UPDATE COMPLETE ===');
+              setEmailSubmitted(true);
+            }, 2000);
           };
 
           const getStatusColor = (status) => {
@@ -389,7 +372,7 @@
                     <div className="flex items-start gap-3">
                       <span className="text-3xl">⏱️</span>
                       <div>
-                        <p className="font-semibold text-gray-900 mb-2">Ca. 3 Minuten · 10 Fragen</p>
+                        <p className="font-semibold text-gray-900 mb-2">Ca. 3 Minuten · 10 geschlossene Fragen</p>
                         <p className="text-gray-700">Ehrliche Selbstreflexion für maximalen Erkenntnisgewinn</p>
                       </div>
                     </div>
@@ -446,25 +429,25 @@
 
                   {/* Main Question - for non-KI questions */}
                   {!isKIQuestion && (
-                    <div className="text-center mb-6">
-                      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                    <div className="text-center mb-4">
+                      <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-4">
                         Wurde diese oder eine ähnliche Frage in ihren letzten wichtigen Meetings diskutiert?
                       </h2>
                     </div>
                   )}
 
-                  {/* Question Number - prominent */}
-                  <div className="text-center mb-8">
-                    <p className="text-5xl font-bold text-brand-600 mb-6">
+                  {/* Question Number - prominent but smaller */}
+                  <div className="text-center mb-6">
+                    <p className="text-4xl font-bold text-brand-600">
                       {currentOverallQuestion}/10
                     </p>
                   </div>
 
-                  {/* Actual Question */}
-                  <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                    <p className="text-xl md:text-2xl text-gray-900 leading-relaxed text-center">
+                  {/* Actual Question - in orange outlined box */}
+                  <div className="rounded-xl p-6 mb-8 border-3 border-brand-500" style={{borderWidth: '3px'}}>
+                    <p className="text-xl md:text-2xl text-gray-900 leading-relaxed text-center font-medium">
                       {isKIQuestion ? (
-                        <span className="font-semibold">{dim.questions[currentQuestion].text}</span>
+                        <span>{dim.questions[currentQuestion].text}</span>
                       ) : (
                         <span className="italic">"{dim.questions[currentQuestion]}"</span>
                       )}
@@ -589,7 +572,7 @@
                       </p>
                     </div>
                     
-                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbzgbG0D6d31qFKagDrf4ZdkZDOr9DcVmSBRBoTzN7M8iHpNgoSGM5g5GR-8C_t36AMwmQ/exec" method="GET" target="hidden_iframe" onSubmit={handleEmailSubmit}>
+                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec" method="GET" target="hidden_iframe" onSubmit={handleEmailSubmit}>
                       <input type="hidden" name="timestamp" value="" />
                       <input type="hidden" name="emailUpdate" value="true" />
                       
