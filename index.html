@@ -39,6 +39,7 @@
           const [email, setEmail] = useState('');
           const [emailSubmitted, setEmailSubmitted] = useState(false);
           const [dataSubmitted, setDataSubmitted] = useState(false);
+          const [submissionTimestamp, setSubmissionTimestamp] = useState('');
           const formRef = useRef(null);
 
           const assessment = {
@@ -248,10 +249,13 @@
             const results = calculateResults();
             const timestamp = new Date().toISOString();
             
+            // WICHTIG: Timestamp speichern für späteren E-Mail-Update
+            setSubmissionTimestamp(timestamp);
+            
             // Build simple data object matching Excel structure
             const dataToSend = {
               timestamp: timestamp,
-              email: email || 'nicht_angegeben',
+              email: 'nicht_angegeben', // E-Mail kommt später
               percentage: results.overallPercentage
             };
 
@@ -271,10 +275,11 @@
 
             // Build URL with all parameters
             const params = new URLSearchParams(dataToSend);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec' + params.toString();
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec?' + params.toString();
             
             console.log('=== SENDING DATA TO GOOGLE SHEETS ===');
             console.log('Data:', dataToSend);
+            console.log('Timestamp:', timestamp);
             console.log('URL length:', scriptURL.length);
             
             // Create and load iframe
@@ -298,12 +303,14 @@
           const handleEmailSubmit = (e) => {
             e.preventDefault();
             if (!email || !email.includes('@')) return;
+            if (!submissionTimestamp) {
+              console.error('Kein Timestamp gefunden!');
+              return;
+            }
 
-            const timestamp = new Date().toISOString();
-            
-            // Send email update - will be matched with timestamp in Google Sheets
+            // WICHTIG: Verwende den GLEICHEN Timestamp wie bei submitData()
             const emailData = {
-              timestamp: timestamp,
+              timestamp: submissionTimestamp, // Der gespeicherte Timestamp!
               email: email,
               emailOnly: 'true'
             };
@@ -313,6 +320,7 @@
             
             console.log('=== SENDING EMAIL UPDATE ===');
             console.log('Email:', email);
+            console.log('Using saved timestamp:', submissionTimestamp);
             
             // Use iframe to submit
             const iframe = document.createElement('iframe');
@@ -572,10 +580,7 @@
                       </p>
                     </div>
                     
-                    <form ref={formRef} action="https://script.google.com/macros/s/AKfycbyr8VnCzKy07KMzL3jFradKhi-LlHcJdMilF-CYQzxihBfs2piqbbw66etpbQF3ypSDew/exec" method="GET" target="hidden_iframe" onSubmit={handleEmailSubmit}>
-                      <input type="hidden" name="timestamp" value="" />
-                      <input type="hidden" name="emailUpdate" value="true" />
-                      
+                    <form onSubmit={handleEmailSubmit}>
                       <div className="flex flex-col md:flex-row gap-3">
                         <input 
                           type="email" 
@@ -597,7 +602,6 @@
                         Ihre Daten werden vertraulich behandelt und nur für Updates zum neuen KI-Format verwendet.
                       </p>
                     </form>
-                    <iframe name="hidden_iframe" style={{ display: 'none' }}></iframe>
                   </div>
                 ) : (
                   <div className="bg-green-50 rounded-2xl p-6 mb-6 text-center border-2 border-green-200">
