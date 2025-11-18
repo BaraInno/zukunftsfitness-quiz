@@ -4,26 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Der 3-Minuten-Zukunftsfitness Check</title>
+    
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration (UPDATED for Brand Colors) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // Use the provided brand colors
+                        'brand': {
+                            // Main Tones
+                            'deep-amber': '#B75514', // Deep Solar Amber
+                            'solar-gold': '#F5A623', // Solar Gold
+                            'future-horizon': '#4CA3C2', // Future Horizon (Blue accent)
+                            'graphite': '#2C2C2C', // Graphite Gray
+                            
+                            // Neutrals/Base
+                            'warm-white': '#FAF8F6', // Warm White
+                            'soft-sand': '#E6E0D6', // Soft Sand
+                            'cool-taupe': '#B6ADA4', // Cool Taupe
+                        },
+                        // Re-map for simplified access in components (e.g., bg-brand-primary)
+                        'brand-primary': '#B75514', // Deep Solar Amber for main action/text
+                        'brand-accent': '#F5A623', // Solar Gold for highlights
+                        'brand-bg': '#FAF8F6', // Warm White for background
+                        'brand-light': '#E6E0D6', // Soft Sand for light borders/fills
+                    },
+                },
+            }
+        }
+    </script>
+
+    <!-- React and Babel CDNs -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        /* Custom brand colors */
-        .bg-brand-50 { background-color: #fff7ed; }
-        .bg-brand-100 { background-color: #ffedd5; }
-        .bg-brand-200 { background-color: #fed7aa; }
-        .bg-brand-300 { background-color: #fdba74; }
-        .bg-brand-600 { background-color: #ea580c; }
-        .bg-brand-700 { background-color: #c2410c; }
-        .text-brand-600 { color: #ea580c; }
-        .border-brand-200 { border-color: #fed7aa; }
-        .border-brand-300 { border-color: #fdba74; }
-        .border-brand-500 { border-color: #f97316; }
-        .hover\:bg-brand-50:hover { background-color: #fff7ed; }
-        .hover\:bg-brand-700:hover { background-color: #c2410c; }
-        .hover\:border-brand-500:hover { border-color: #f97316; }
-        .focus\:border-brand-500:focus { border-color: #f97316; }
+        /* Apply the Inter font to the body */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        /* Custom border width for the question box */
+        .border-3 {
+            border-width: 3px;
+        }
+        /* Overriding the default bg color with Warm White/Soft Sand gradient */
+        .bg-gradient-brand {
+            background: linear-gradient(145deg, #FAF8F6, #E6E0D6);
+        }
     </style>
 </head>
 <body>
@@ -32,605 +72,585 @@
         const { useState, useRef, useEffect } = React;
 
         function ZukunftsfitnesCheck() {
-          const [screen, setScreen] = useState('start');
-          const [currentDimension, setCurrentDimension] = useState(0);
-          const [currentQuestion, setCurrentQuestion] = useState(0);
-          const [answers, setAnswers] = useState({});
-          const [email, setEmail] = useState('');
-          const [emailSubmitted, setEmailSubmitted] = useState(false);
-          const [dataSubmitted, setDataSubmitted] = useState(false);
-          const [submissionTimestamp, setSubmissionTimestamp] = useState('');
-          const formRef = useRef(null);
+            const [screen, setScreen] = useState('start');
+            const [currentDimension, setCurrentDimension] = useState(0);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [email, setEmail] = useState('');
+            const [emailSubmitted, setEmailSubmitted] = useState(false);
+            const [dataSubmitted, setDataSubmitted] = useState(false);
+            const [submissionTimestamp, setSubmissionTimestamp] = useState('');
+            const formRef = useRef(null);
 
-          const assessment = {
-            title: "Der 3-Minuten-Zukunftsfitness Check:",
-            subtitle: "Wie fit ist Ihre Organisation?",
-            description: "Nicht auf dem Papier, sondern in Ihrem Alltag. Dieses Mini-Quiz zeigt, wie oft Zukunft wirklich mit am Tisch sitzt – und ob sie mitentscheidet!",
-            instruction: "Denken Sie an Ihre letzten 3-5 Meetings oder Entscheidungsrunden:",
-            instructionPoints: [
-              "Wurden Fragen dieser Art von euch oder jemandem in der Runde gefragt?",
-              "Wurde danach auch entsprechend entschieden oder gehandelt?"
-            ],
-            dimensions: [
-              {
-                name: "Wertorientierung",
-                subtitle: "Tun wir das Richtige?",
-                icon: "🎯",
-                questions: [
-                  "Was können wir weglassen, damit wir unsere Top-3-Prioritäten schneller voranbringen?",
-                  "Wie genau zahlt dieses Thema auf unseren Kundennutzen und Geschäftserfolg ein?"
+            const assessment = {
+                title: "Der 3-Minuten-Zukunftsfitness Check:",
+                subtitle: "Wie fit ist Ihre Organisation?",
+                description: "Nicht auf dem Papier, sondern in Ihrem Alltag. Dieses Mini-Quiz zeigt, wie oft Zukunft wirklich mit am Tisch sitzt – und ob sie mitentscheidet!",
+                instruction: "Denken Sie an Ihre letzten 3-5 Meetings oder Entscheidungsrunden:",
+                instructionPoints: [
+                    "Wurden Fragen dieser Art von euch oder jemandem in der Runde gefragt?",
+                    "Wurde danach auch entsprechend entschieden oder gehandelt?"
+                ],
+                dimensions: [
+                    {
+                        name: "Wertorientierung",
+                        subtitle: "Tun wir das Richtige?",
+                        icon: "🎯",
+                        questions: [
+                            "Was können wir weglassen, damit wir unsere Top-3-Prioritäten schneller voranbringen?",
+                            "Wie genau zahlt dieses Thema auf unseren Kundennutzen und Geschäftserfolg ein?"
+                        ]
+                    },
+                    {
+                        name: "Zusammenarbeit",
+                        subtitle: "Die richtigen Menschen, effektiv zusammen",
+                        icon: "🤝",
+                        questions: [
+                            "Sitzen in dieser Runde alle, die das Thema wirklich verstehen und entscheiden können?",
+                            "Ist klar, wer ab jetzt wofür Verantwortung übernimmt, damit wir das gemeinsam voranbringen?"
+                        ]
+                    },
+                    {
+                        name: "Anpassungsfähigkeit",
+                        subtitle: "Lernen mit & von Kund:innen",
+                        icon: "🔄",
+                        questions: [
+                            "Können wir es erst in klein ausprobieren, bevor wir es final festzurren?",
+                            "Sehen wir in Daten unserer Kund:innen und Geschäftszahlen, dass das die richtige Maßnahme ist?"
+                        ]
+                    },
+                    {
+                        name: "Innovationskraft",
+                        subtitle: "Kreativität mit Wirkung",
+                        icon: "💡",
+                        questions: [
+                            "Wie könnte uns KI oder andere Technologien helfen, dieses Thema deutlich besser oder schneller zu lösen?",
+                            "Ich habe mich mit Firma Y ausgetauscht und wir könnten unsere Herausforderung X im Kerngeschäft mit Innovation Z gut lösen - wollen wir es in einem kleinen Piloten testen?"
+                        ]
+                    },
+                    {
+                        name: "KI-Fitness",
+                        subtitle: "Persönliche Zukunftsfitness",
+                        icon: "🤖",
+                        isBonus: true,
+                        bonusText: "Bonus Fragen zu KI - hier geht es nicht um ein Meeting sondern Ihren Alltag:",
+                        questions: [
+                            {
+                                text: "Wie häufig nutzen Sie persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
+                                options: [
+                                    { text: "Mehrmals täglich", value: 2, color: "green" },
+                                    { text: "Mehrmals wöchentlich", value: 1, color: "green" },
+                                    { text: "Mehrmals monatlich", value: 1, color: "yellow" },
+                                    { text: "Selten", value: 0, color: "red" },
+                                    { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
+                                ]
+                            },
+                            {
+                                text: "Wann haben Sie zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das Sie vorher noch nie genutzt haben?",
+                                options: [
+                                    { text: "Heute", value: 2, color: "green" },
+                                    { text: "In den letzten Tagen", value: 2, color: "green" },
+                                    { text: "Im letzten Monat", value: 1, color: "yellow" },
+                                    { text: "Dieses Jahr", value: 0, color: "red" },
+                                    { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                standardOptions: [
+                    { text: "Ja - dieses Thema haben wir diskutiert UND entsprechende Maßnahmen umgesetzt", value: 2, color: "green" },
+                    { text: "Ja - aber es ist bei Diskussion geblieben", value: 1, color: "yellow" },
+                    { text: "Nein - das Thema kam nicht auf", value: 0, color: "red" }
                 ]
-              },
-              {
-                name: "Zusammenarbeit",
-                subtitle: "Die richtigen Menschen, effektiv zusammen",
-                icon: "🤝",
-                questions: [
-                  "Sitzen in dieser Runde alle, die das Thema wirklich verstehen und entscheiden können?",
-                  "Ist klar, wer ab jetzt wofür Verantwortung übernimmt, damit wir das gemeinsam voranbringen?"
-                ]
-              },
-              {
-                name: "Anpassungsfähigkeit",
-                subtitle: "Lernen mit & von Kund:innen",
-                icon: "🔄",
-                questions: [
-                  "Können wir es erst in klein ausprobieren, bevor wir es final festzurren?",
-                  "Sehen wir in Daten unserer Kund:innen und Geschäftszahlen, dass das die richtige Maßnahme ist?"
-                ]
-              },
-              {
-                name: "Innovationskraft",
-                subtitle: "Kreativität mit Wirkung",
-                icon: "💡",
-                questions: [
-                  "Wie könnte uns KI oder andere Technologien helfen, dieses Thema deutlich besser oder schneller zu lösen?",
-                  "Ich habe mich mit Firma Y ausgetauscht und wir könnten unsere Herausforderung X im Kerngeschäft mit Innovation Z gut lösen - wollen wir es in einem kleinen Piloten testen?"
-                ]
-              },
-              {
-                name: "KI-Fitness",
-                subtitle: "Persönliche Zukunftsfitness",
-                icon: "🤖",
-                isBonus: true,
-                bonusText: "Bonus Fragen zu KI - hier geht es nicht um ein Meeting sondern Ihren Alltag:",
-                questions: [
-                  {
-                    text: "Wie häufig nutzen Sie persönlich KI-Tools (z. B. ChatGPT, Copilot, Midjourney) aktiv im Alltag?",
-                    options: [
-                      { text: "Mehrmals täglich", value: 2, color: "green" },
-                      { text: "Mehrmals wöchentlich", value: 1, color: "green" },
-                      { text: "Mehrmals monatlich", value: 1, color: "yellow" },
-                      { text: "Selten", value: 0, color: "red" },
-                      { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
-                    ]
-                  },
-                  {
-                    text: "Wann haben Sie zuletzt einen komplett neuen KI-Anwendungsfall ausprobiert – also etwas, das Sie vorher noch nie genutzt haben?",
-                    options: [
-                      { text: "Heute", value: 2, color: "green" },
-                      { text: "In den letzten Tagen", value: 2, color: "green" },
-                      { text: "Im letzten Monat", value: 1, color: "yellow" },
-                      { text: "Dieses Jahr", value: 0, color: "red" },
-                      { text: "Ich nutze kaum KI Tools", value: 0, color: "red" }
-                    ]
-                  }
-                ]
-              }
-            ],
-            standardOptions: [
-              { text: "Ja - dieses Thema haben wir diskutiert UND entsprechende Maßnahmen umgesetzt", value: 2, color: "green" },
-              { text: "Ja - aber es ist bei Diskussion geblieben", value: 1, color: "yellow" },
-              { text: "Nein - das Thema kam nicht auf", value: 0, color: "red" }
-            ]
-          };
+            };
 
-          const getTotalQuestions = () => {
-            return assessment.dimensions.reduce((sum, dim) => {
-              return sum + (Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length);
-            }, 0);
-          };
+            const getTotalQuestions = () => {
+                return assessment.dimensions.reduce((sum, dim) => {
+                    // Check if questions array contains objects or strings, in this structure it's just questions.length
+                    return sum + dim.questions.length;
+                }, 0);
+            };
 
-          const handleAnswer = (answer) => {
-            const dim = assessment.dimensions[currentDimension];
-            const questionKey = `dim${currentDimension}_q${currentQuestion}`;
-            
-            // Create updated answers object with the current answer
-            const updatedAnswers = {...answers, [questionKey]: answer};
-            setAnswers(updatedAnswers);
-
-            // Check if we need to move to next question or dimension
-            const questionsInDim = Array.isArray(dim.questions[0]) ? dim.questions.length : dim.questions.length;
-            
-            if (currentQuestion < questionsInDim - 1) {
-              setCurrentQuestion(currentQuestion + 1);
-            } else if (currentDimension < assessment.dimensions.length - 1) {
-              setCurrentDimension(currentDimension + 1);
-              setCurrentQuestion(0);
-            } else {
-              // All questions answered - submit data with complete answers and show results
-              submitData(updatedAnswers);
-              setScreen('results');
-            }
-          };
-
-          const calculateResults = (answersToUse = answers) => {
-            const dimensionResults = assessment.dimensions.map((dim, dimIdx) => {
-              if (dim.isBonus) {
-                // KI Fitness - count both colors AND points
-                const q0Answer = answersToUse[`dim${dimIdx}_q0`];
-                const q1Answer = answersToUse[`dim${dimIdx}_q1`];
+            const handleAnswer = (answer) => {
+                const dim = assessment.dimensions[currentDimension];
+                const questionKey = `dim${currentDimension}_q${currentQuestion}`;
                 
-                const q0Color = q0Answer?.color || 'red';
-                const q1Color = q1Answer?.color || 'red';
-                const q0Points = q0Answer?.value || 0;
-                const q1Points = q1Answer?.value || 0;
+                // Create updated answers object with the current answer
+                const updatedAnswers = {...answers, [questionKey]: answer};
+                setAnswers(updatedAnswers);
+
+                // Check if we need to move to next question or dimension
+                const questionsInDim = dim.questions.length;
                 
-                const points = q0Points + q1Points;
-                const maxPoints = 4; // 2 questions, 2 points each
-                const percentage = (points / maxPoints) * 100;
-                
-                let status = 'red';
-                if (percentage >= 75) status = 'green';
-                else if (percentage >= 50) status = 'yellow';
-                
-                return {
-                  name: dim.name,
-                  icon: dim.icon,
-                  subtitle: dim.subtitle,
-                  status: status,
-                  points: points,
-                  maxPoints: maxPoints,
-                  percentage: Math.round(percentage),
-                  isBonus: true
-                };
-              } else {
-                // Regular dimensions - sum points
-                let points = 0;
-                dim.questions.forEach((_, qIdx) => {
-                  const answer = answersToUse[`dim${dimIdx}_q${qIdx}`];
-                  points += answer?.value || 0;
+                if (currentQuestion < questionsInDim - 1) {
+                    setCurrentQuestion(currentQuestion + 1);
+                } else if (currentDimension < assessment.dimensions.length - 1) {
+                    setCurrentDimension(currentDimension + 1);
+                    setCurrentQuestion(0);
+                } else {
+                    // All questions answered - submit data with complete answers and show results
+                    submitData(updatedAnswers);
+                    setScreen('results');
+                }
+            };
+
+            const calculateResults = (answersToUse = answers) => {
+                const dimensionResults = assessment.dimensions.map((dim, dimIdx) => {
+                    if (dim.isBonus) {
+                        // KI Fitness - calculate points and determine status
+                        const q0Answer = answersToUse[`dim${dimIdx}_q0`];
+                        const q1Answer = answersToUse[`dim${dimIdx}_q1`];
+                        
+                        const q0Points = q0Answer?.value || 0;
+                        const q1Points = q1Answer?.value || 0;
+                        
+                        const points = q0Points + q1Points;
+                        const maxPoints = 4; // 2 questions, 2 points each
+                        const percentage = (points / maxPoints) * 100;
+                        
+                        let status = 'red';
+                        if (percentage >= 75) status = 'green';
+                        else if (percentage >= 50) status = 'yellow';
+                        
+                        return {
+                            name: dim.name,
+                            icon: dim.icon,
+                            subtitle: dim.subtitle,
+                            status: status,
+                            points: points,
+                            maxPoints: maxPoints,
+                            percentage: Math.round(percentage),
+                            isBonus: true
+                        };
+                    } else {
+                        // Regular dimensions - sum points
+                        let points = 0;
+                        dim.questions.forEach((_, qIdx) => {
+                            const answer = answersToUse[`dim${dimIdx}_q${qIdx}`];
+                            points += answer?.value || 0;
+                        });
+                        
+                        const maxPoints = dim.questions.length * 2;
+                        const percentage = (points / maxPoints) * 100;
+                        
+                        let status = 'red';
+                        if (percentage >= 75) status = 'green';
+                        else if (percentage >= 50) status = 'yellow';
+                        
+                        return {
+                            name: dim.name,
+                            icon: dim.icon,
+                            subtitle: dim.subtitle,
+                            points: points,
+                            maxPoints: maxPoints,
+                            percentage: Math.round(percentage),
+                            status: status,
+                            isBonus: false
+                        };
+                    }
                 });
+
+                // Count green statuses for overall interpretation (only based on the 4 main dimensions)
+                const mainDimensionResults = dimensionResults.filter(d => !d.isBonus);
+                const greenCount = mainDimensionResults.filter(d => d.status === 'green').length;
                 
-                const maxPoints = dim.questions.length * 2;
-                const percentage = (points / maxPoints) * 100;
-                
-                let status = 'red';
-                if (percentage >= 75) status = 'green';
-                else if (percentage >= 50) status = 'yellow';
-                
-                return {
-                  name: dim.name,
-                  icon: dim.icon,
-                  subtitle: dim.subtitle,
-                  points: points,
-                  maxPoints: maxPoints,
-                  percentage: Math.round(percentage),
-                  status: status,
-                  isBonus: false
+                // Overall interpretation (only based on the 4 main dimensions)
+                let overall = {
+                    badge: "💪 Zeit zu starten",
+                    level: "Zeit zu starten",
+                    description: "Die beste Zeit, zukunftsfitter zu werden, ist jetzt! Lasst uns loslegen.",
+                    color: "red"
                 };
-              }
-            });
+                
+                if (greenCount >= 4) {
+                    overall = {
+                        badge: "🚀 Zukunftsfit!",
+                        level: "Zukunftsfit",
+                        description: "Ihr sprecht nicht nur über Zukunft, ihr gestaltet sie aktiv. Weiter so!",
+                        color: "green"
+                    };
+                } else if (greenCount >= 2) {
+                    overall = {
+                        badge: "⚙️ Auf gutem Weg",
+                        level: "Auf gutem Weg",
+                        description: "Das Bewusstsein ist da – jetzt braucht es mehr Konsequenz im Handeln.",
+                        color: "yellow"
+                    };
+                }
 
-            // Count green statuses
-            const greenCount = dimensionResults.filter(d => d.status === 'green').length;
-            
-            // Overall interpretation
-            let overall = {
-              badge: "💪 Zeit zu starten",
-              level: "Zeit zu starten",
-              description: "Die beste Zeit, zukunftsfitter zu werden, ist jetzt! Lasst uns loslegen.",
-              color: "red"
-            };
-            
-            if (greenCount >= 4) {
-              overall = {
-                badge: "🚀 Zukunftsfit!",
-                level: "Zukunftsfit",
-                description: "Ihr sprecht nicht nur über Zukunft, ihr gestaltet sie aktiv. Weiter so!",
-                color: "green"
-              };
-            } else if (greenCount >= 2) {
-              overall = {
-                badge: "⚙️ Auf gutem Weg",
-                level: "Auf gutem Weg",
-                description: "Das Bewusstsein ist da – jetzt braucht es mehr Konsequenz im Handeln.",
-                color: "yellow"
-              };
-            }
+                // Calculate total points for ALL dimensions including KI-Fitness (4 main dimensions * 4 points + 4 KI points = 20)
+                const totalPoints = dimensionResults.reduce((sum, d) => sum + d.points, 0);
+                const maxTotalPoints = 20; 
+                const overallPercentage = Math.round((totalPoints / maxTotalPoints) * 100);
 
-            // Calculate total points for ALL dimensions including KI-Fitness
-            const totalPoints = dimensionResults.reduce((sum, d) => sum + d.points, 0);
-            const maxTotalPoints = 20; // 4 regular dimensions (16) + KI-Fitness (4)
-            const overallPercentage = Math.round((totalPoints / maxTotalPoints) * 100);
-
-            return {
-              dimensionResults,
-              overall,
-              totalPoints,
-              maxTotalPoints,
-              overallPercentage,
-              greenCount
-            };
-          };
-
-          const submitData = (answersToSubmit = answers) => {
-            if (dataSubmitted) return;
-            
-            const results = calculateResults(answersToSubmit);
-            const timestamp = new Date().toISOString();
-            
-            // WICHTIG: Timestamp speichern für späteren E-Mail-Update
-            setSubmissionTimestamp(timestamp);
-            
-            // Build simple data object matching Excel structure
-            const dataToSend = {
-              timestamp: timestamp,
-              email: 'nicht_angegeben', // E-Mail kommt später
-              percentage: results.overallPercentage
+                return {
+                    dimensionResults,
+                    overall,
+                    totalPoints,
+                    maxTotalPoints,
+                    overallPercentage,
+                    greenCount
+                };
             };
 
-            // Add all 10 answers as simple text (Frage 1 to Frage 10)
-            for (let i = 0; i < 10; i++) {
-              const dimIndex = Math.floor(i / 2);
-              const questionIndex = i % 2;
-              const answerKey = `dim${dimIndex}_q${questionIndex}`;
-              const answer = answersToSubmit[answerKey];
-              
-              if (answer) {
-                dataToSend[`frage${i + 1}`] = answer.text || 'Keine Antwort';
-              } else {
-                dataToSend[`frage${i + 1}`] = 'Keine Antwort';
-              }
-            }
+            const submitData = (answersToSubmit = answers) => {
+                if (dataSubmitted) return;
+                
+                const results = calculateResults(answersToSubmit);
+                const timestamp = new Date().toISOString();
+                
+                // WICHTIG: Timestamp speichern für späteren E-Mail-Update
+                setSubmissionTimestamp(timestamp);
+                
+                // Build simple data object matching Excel structure
+                const dataToSend = {
+                    timestamp: timestamp,
+                    email: 'nicht_angegeben', // E-Mail kommt später
+                    percentage: results.overallPercentage
+                };
 
-            // Build URL with all parameters
-            const params = new URLSearchParams(dataToSend);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
-            
-            console.log('=== SENDING DATA TO GOOGLE SHEETS ===');
-            console.log('Data:', dataToSend);
-            console.log('Timestamp:', timestamp);
-            console.log('URL length:', scriptURL.length);
-            
-            // Create and load iframe
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'data_submit_iframe';
-            iframe.src = scriptURL;
-            document.body.appendChild(iframe);
-            
-            // Remove iframe after delay
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-              console.log('=== DATA SUBMISSION COMPLETE ===');
-            }, 5000);
-            
-            setDataSubmitted(true);
-          };
-
-          const handleEmailSubmit = (e) => {
-            e.preventDefault();
-            if (!email || !email.includes('@')) return;
-            if (!submissionTimestamp) {
-              console.error('Kein Timestamp gefunden!');
-              return;
-            }
-
-            // WICHTIG: Verwende den GLEICHEN Timestamp wie bei submitData()
-            const emailData = {
-              timestamp: submissionTimestamp, // Der gespeicherte Timestamp!
-              email: email,
-              emailOnly: 'true'
-            };
-            
-            const params = new URLSearchParams(emailData);
-            const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
-            
-            console.log('=== SENDING EMAIL UPDATE ===');
-            console.log('Email:', email);
-            console.log('Using saved timestamp:', submissionTimestamp);
-            
-            // Use iframe to submit
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'email_submit_iframe';
-            iframe.src = scriptURL;
-            document.body.appendChild(iframe);
-            
-            setTimeout(() => {
-              if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe);
-              }
-              console.log('=== EMAIL UPDATE COMPLETE ===');
-              setEmailSubmitted(true);
-            }, 2000);
-          };
-
-          const getStatusColor = (status) => {
-            if (status === 'green') return 'bg-green-500';
-            if (status === 'yellow') return 'bg-yellow-500';
-            return 'bg-red-500';
-          };
-
-          const getStatusEmoji = (status) => {
-            if (status === 'green') return '🟢';
-            if (status === 'yellow') return '🟡';
-            return '🔴';
-          };
-
-          // Start Screen
-          if (screen === 'start') {
-            return (
-              <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4">
-                <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-                  <div className="text-center mb-8">
-                    <div className="text-7xl mb-6">🧭</div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">{assessment.title}</h1>
-                    <h2 className="text-3xl md:text-4xl font-bold text-brand-600 mb-6">{assessment.subtitle}</h2>
-                    <p className="text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">{assessment.description}</p>
-                  </div>
-
-                  <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">💼</span>
-                      <div>
-                        <p className="font-bold text-gray-900 mb-2">Denkt bei den folgenden Fragen an eure letzten 3-5 Meetings oder Entscheidungsrunden:</p>
-                        <ul className="space-y-1 text-gray-700">
-                          {assessment.instructionPoints.map((point, idx) => (
-                            <li key={idx} className="text-sm">• {point}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-brand-50 rounded-xl p-6 mb-8 border-2 border-brand-200">
-                    <div className="flex items-start gap-3">
-                      <span className="text-3xl">⏱️</span>
-                      <div>
-                        <p className="font-semibold text-gray-900 mb-2">Ca. 3 Minuten · 10 geschlossene Fragen</p>
-                        <p className="text-gray-700">Ehrliche Selbstreflexion für maximalen Erkenntnisgewinn</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => setScreen('assessment')} 
-                    className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold px-10 py-5 rounded-xl text-xl shadow-lg transition-all transform hover:scale-105"
-                  >
-                    Check starten
-                  </button>
-                </div>
-              </div>
-            );
-          }
-
-          // Assessment Screen
-          if (screen === 'assessment') {
-            const dim = assessment.dimensions[currentDimension];
-            const isKIQuestion = dim.isBonus;
-            const totalQuestions = getTotalQuestions();
-            const currentOverallQuestion = assessment.dimensions.slice(0, currentDimension).reduce((sum, d) => {
-              return sum + (Array.isArray(d.questions[0]) ? d.questions.length : d.questions.length);
-            }, 0) + currentQuestion + 1;
-            const progress = (currentOverallQuestion / totalQuestions) * 100;
-
-            return (
-              <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4">
-                <div className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
-                  {/* Progress */}
-                  <div className="mb-8">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-semibold text-gray-600">
-                        {dim.name}
-                      </span>
-                      <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div className="bg-brand-600 h-3 rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div>
-                    </div>
-                  </div>
-
-                  {/* KI Bonus Instruction - only for KI questions */}
-                  {dim.isBonus && currentQuestion === 0 && (
-                    <div className="bg-purple-50 rounded-xl p-6 mb-8 border-2 border-purple-200">
-                      <div className="flex items-start gap-3">
-                        <span className="text-3xl">🤖</span>
-                        <div>
-                          <p className="font-bold text-gray-900">{dim.bonusText}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Main Question - for non-KI questions */}
-                  {!isKIQuestion && (
-                    <div className="text-center mb-4">
-                      <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-4">
-                        Wurde diese oder eine ähnliche Frage in Ihren letzten wichtigen Meetings diskutiert?
-                      </h2>
-                    </div>
-                  )}
-
-                  {/* Question Number - prominent but smaller */}
-                  <div className="text-center mb-6">
-                    <p className="text-4xl font-bold text-brand-600">
-                      {currentOverallQuestion}/10
-                    </p>
-                  </div>
-
-                  {/* Actual Question - in orange outlined box */}
-                  <div className="rounded-xl p-6 mb-8 border-3 border-brand-500" style={{borderWidth: '3px'}}>
-                    <p className="text-xl md:text-2xl text-gray-900 leading-relaxed text-center font-medium">
-                      {isKIQuestion ? (
-                        <span>{dim.questions[currentQuestion].text}</span>
-                      ) : (
-                        <span className="italic">"{dim.questions[currentQuestion]}"</span>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Answer Options */}
-                  <div className="space-y-3">
-                    {isKIQuestion ? (
-                      // KI Questions with custom options
-                      dim.questions[currentQuestion].options.map((option, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleAnswer(option)}
-                          className="w-full text-left p-5 rounded-xl border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all duration-200 transform hover:scale-102"
-                        >
-                          <span className="text-lg font-medium text-gray-900">{option.text}</span>
-                        </button>
-                      ))
-                    ) : (
-                      // Standard questions with standard options
-                      assessment.standardOptions.map((option, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleAnswer(option)}
-                          className="w-full text-left p-5 rounded-xl border-2 border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-all duration-200 transform hover:scale-102"
-                        >
-                          <span className="text-lg font-medium text-gray-900">{option.text}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          // Results Screen
-          const results = calculateResults();
-
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-brand-50 to-amber-50 flex items-center justify-center p-4 py-8">
-              <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10">
-                {/* Overall Result */}
-                <div className="text-center mb-8">
-                  <div className="text-5xl mb-4">📊</div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-3">Ihre Zukunftsfitness-Analyse</h2>
-                  
-                  <div className={`inline-block px-6 py-3 rounded-2xl mb-4 ${
-                    results.overall.color === 'green' ? 'bg-green-100 border-2 border-green-300' :
-                    results.overall.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-300' :
-                    'bg-red-100 border-2 border-red-300'
-                  }`}>
-                    <p className="text-2xl font-bold">{results.overall.badge}</p>
-                  </div>
-                  
-                  <p className="text-lg text-gray-700 mb-4 max-w-2xl mx-auto leading-relaxed">
-                    {results.overall.description}
-                  </p>
-                  
-                  <div className="bg-gray-50 rounded-xl p-4 inline-block">
-                    <p className="text-2xl font-bold text-brand-600">{results.overallPercentage}%</p>
-                    <p className="text-xs text-gray-600">{results.totalPoints} von {results.maxTotalPoints} Punkten</p>
-                  </div>
-                </div>
-
-                {/* Dimension Results */}
-                <div className="space-y-3 mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Ihre Bereiche im Detail:</h3>
-                  
-                  {results.dimensionResults.map((dimResult, idx) => (
-                    <div key={idx} className="bg-gray-50 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3 flex-1">
-                          <span className="text-3xl">{dimResult.icon}</span>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-base text-gray-900">{dimResult.name}</h4>
-                            <p className="text-xs text-gray-600">{dimResult.subtitle}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right mr-3">
-                            <p className="text-xl font-bold text-brand-600">{dimResult.percentage}%</p>
-                            <p className="text-xs text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
-                          </div>
-                          <div className={`w-10 h-10 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center`}>
-                            <span className="text-xl">{getStatusEmoji(dimResult.status)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-500 ${
-                            dimResult.status === 'green' ? 'bg-green-500' :
-                            dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}
-                          style={{width: `${dimResult.percentage}%`}}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Email Collection */}
-                {!emailSubmitted ? (
-                  <div className="bg-gradient-to-br from-brand-50 to-amber-50 rounded-2xl p-6 mb-6 border-2 border-brand-200">
-                    <div className="text-center mb-6">
-                      <span className="text-4xl mb-3 block">🤖✨</span>
-                      <h3 className="text-xl font-bold text-gray-900 mb-3">Sie möchten KI-fit werden aber haben kaum Zeit?</h3>
-                      <p className="text-gray-700 leading-relaxed text-base mb-2">
-                        Ab 2026 führe ich ein neues <strong>exklusives Format für Top-Führungskräfte</strong> ein!
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-base mb-3">
-                        <strong>100% individuell</strong> und daher nur mit <strong>limitierten Plätzen</strong>.
-                      </p>
-                      <p className="text-gray-700 leading-relaxed text-base">
-                        <strong>Neugierig?</strong> Lassen Sie Ihre E-Mail Adresse da und Sie erfahren als erster, wenn die Anmeldung startet!
-                      </p>
-                    </div>
+                // Add all 10 answers as simple text (Frage 1 to Frage 10)
+                for (let i = 0; i < 10; i++) {
+                    const dimIndex = Math.floor(i / 2);
+                    const questionIndex = i % 2;
+                    const answerKey = `dim${dimIndex}_q${questionIndex}`;
+                    const answer = answersToSubmit[answerKey];
                     
-                    <form onSubmit={handleEmailSubmit}>
-                      <div className="flex flex-col md:flex-row gap-3">
-                        <input 
-                          type="email" 
-                          name="email" 
-                          value={email} 
-                          onChange={(e) => setEmail(e.target.value)} 
-                          placeholder="ihre@email.com" 
-                          className="flex-1 px-6 py-4 rounded-xl border-2 border-brand-300 focus:border-brand-500 focus:outline-none text-lg" 
-                          required 
-                        />
-                        <button 
-                          type="submit" 
-                          className="bg-brand-600 hover:bg-brand-700 text-white font-bold px-8 py-4 rounded-xl text-lg shadow-lg transition-all transform hover:scale-105 whitespace-nowrap"
-                        >
-                          Ja, ich will mehr erfahren!
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-3 text-center">
-                        Ihre Daten werden vertraulich behandelt und nur für Updates zum neuen KI-Format verwendet.
-                      </p>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="bg-green-50 rounded-2xl p-6 mb-6 text-center border-2 border-green-200">
-                    <span className="text-5xl mb-3 block">✅</span>
-                    <h3 className="text-xl font-bold text-green-900 mb-2">Vielen Dank!</h3>
-                    <p className="text-green-800 text-base mb-2">
-                      Sie erhalten als einer der ersten eine Information, sobald eine Anmeldung möglich ist.
-                    </p>
-                    <p className="text-green-800 text-base">
-                      Wenn Sie nicht so lange warten wollen, melden Sie sich jederzeit: <a href="mailto:barbora@zukunftsfit.jetzt" className="font-semibold underline">barbora@zukunftsfit.jetzt</a>
-                    </p>
-                  </div>
-                )}
+                    if (answer) {
+                        dataToSend[`frage${i + 1}`] = answer.text || 'Keine Antwort';
+                    } else {
+                        dataToSend[`frage${i + 1}`] = 'Keine Antwort';
+                    }
+                }
 
-                <div className="text-center pt-6 border-t-2 border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    Entwickelt von <strong className="text-brand-600">Barbora Dörflinger</strong> · <a href="https://zukunftsfit.jetzt" className="text-brand-600 hover:underline font-semibold">zukunftsfit.jetzt</a>
-                  </p>
+                // Build URL with all parameters
+                const params = new URLSearchParams(dataToSend);
+                // The Google Script URL must be correct:
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
+                
+                console.log('=== SENDING DATA TO GOOGLE SHEETS ===');
+                console.log('Data:', dataToSend);
+                console.log('Timestamp:', timestamp);
+                console.log('URL length:', scriptURL.length);
+                
+                // Create and load iframe to avoid CORS issues with the Google Script
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.name = 'data_submit_iframe';
+                iframe.src = scriptURL;
+                document.body.appendChild(iframe);
+                
+                // Remove iframe after delay
+                setTimeout(() => {
+                    if (document.body.contains(iframe)) {
+                        document.body.removeChild(iframe);
+                    }
+                    console.log('=== DATA SUBMISSION COMPLETE ===');
+                }, 5000);
+                
+                setDataSubmitted(true);
+            };
+
+            const handleEmailSubmit = (e) => {
+                e.preventDefault();
+                if (!email || !email.includes('@')) return;
+                if (!submissionTimestamp) {
+                    console.error('Kein Timestamp gefunden! Die Datenübermittlung muss zuerst abgeschlossen sein.');
+                    return;
+                }
+
+                // WICHTIG: Verwende den GLEICHEN Timestamp wie bei submitData()
+                const emailData = {
+                    timestamp: submissionTimestamp, // Der gespeicherte Timestamp!
+                    email: email,
+                    emailOnly: 'true'
+                };
+                
+                const params = new URLSearchParams(emailData);
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbxqjT04Vc0s4KYXAGqNJAgy1PB62LKpv4y4JX5CMVjw-W1PVW28pAJ95w8D_Ot4ikaw/exec?' + params.toString();
+                
+                console.log('=== SENDING EMAIL UPDATE ===');
+                console.log('Email:', email);
+                console.log('Using saved timestamp:', submissionTimestamp);
+                
+                // Use iframe to submit
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.name = 'email_submit_iframe';
+                iframe.src = scriptURL;
+                document.body.appendChild(iframe);
+                
+                setTimeout(() => {
+                    if (document.body.contains(iframe)) {
+                        document.body.removeChild(iframe);
+                    }
+                    console.log('=== EMAIL UPDATE COMPLETE ===');
+                    setEmailSubmitted(true);
+                }, 2000);
+            };
+
+            const getStatusColor = (status) => {
+                if (status === 'green') return 'bg-green-500';
+                if (status === 'yellow') return 'bg-yellow-500';
+                return 'bg-red-500';
+            };
+
+            const getStatusEmoji = (status) => {
+                if (status === 'green') return '🟢';
+                if (status === 'yellow') return '🟡';
+                return '🔴';
+            };
+
+            // Start Screen
+            if (screen === 'start') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-brand-bg to-brand-light flex items-center justify-center p-4">
+                        <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+                            <div className="text-center mb-8">
+                                <div className="text-7xl mb-6 text-brand-primary">🧭</div>
+                                <h1 className="text-4xl md:text-5xl font-bold text-graphite mb-3">{assessment.title}</h1>
+                                <h2 className="text-3xl md:text-4xl font-bold text-brand-primary mb-6">{assessment.subtitle}</h2>
+                                <p className="text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">{assessment.description}</p>
+                            </div>
+
+                            <div className="bg-brand-light/50 rounded-xl p-6 mb-8 border-2 border-brand-light">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-3xl text-brand-primary">💼</span>
+                                    <div>
+                                        <p className="font-bold text-graphite mb-2">Denkt bei den folgenden Fragen an eure letzten 3-5 Meetings oder Entscheidungsrunden:</p>
+                                        <ul className="space-y-1 text-gray-700 list-disc list-inside ml-2"> {/* Added list styles for better visibility */}
+                                            {assessment.instructionPoints.map((point, idx) => (
+                                                <li key={idx} className="text-sm">• {point}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-brand-light/50 rounded-xl p-6 mb-8 border-2 border-brand-light">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-3xl text-brand-primary">⏱️</span>
+                                    <div>
+                                        <p className="font-semibold text-graphite mb-2">Ca. 3 Minuten · 10 geschlossene Fragen</p>
+                                        <p className="text-gray-700">Ehrliche Selbstreflexion für maximalen Erkenntnisgewinn</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setScreen('assessment')} 
+                                className="w-full bg-brand-primary hover:bg-brand-primary/80 text-white font-bold px-10 py-5 rounded-xl text-xl shadow-lg transition-all transform hover:scale-[1.02]" // Subtle scale for effect
+                            >
+                                Check starten
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Assessment Screen
+            if (screen === 'assessment') {
+                const dim = assessment.dimensions[currentDimension];
+                const isKIQuestion = dim.isBonus;
+                const totalQuestions = getTotalQuestions();
+                const currentOverallQuestion = assessment.dimensions.slice(0, currentDimension).reduce((sum, d) => {
+                    return sum + d.questions.length;
+                }, 0) + currentQuestion + 1;
+                const progress = (currentOverallQuestion / totalQuestions) * 100;
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-brand-bg to-brand-light flex items-center justify-center p-4">
+                        <div className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+                            {/* Progress */}
+                            <div className="mb-8">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-sm font-semibold text-brand-primary">
+                                        {dim.icon} {dim.name} - {dim.subtitle}
+                                    </span>
+                                    <span className="text-sm text-gray-500">{currentOverallQuestion}/{totalQuestions} ({Math.round(progress)}%)</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                    <div className="bg-brand-primary h-3 rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div>
+                                </div>
+                            </div>
+
+                            {/* KI Bonus Instruction - only for KI questions */}
+                            {dim.isBonus && currentQuestion === 0 && (
+                                <div className="bg-brand-light/50 rounded-xl p-6 mb-8 border-2 border-brand-primary/50">
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-3xl">🤖</span>
+                                        <div>
+                                            <p className="font-bold text-graphite">{dim.bonusText}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Main Question Header - for non-KI questions */}
+                            {!isKIQuestion && (
+                                <div className="text-center mb-4">
+                                    <h2 className="text-xl md:text-2xl font-semibold text-gray-700 mb-4">
+                                        Wurde diese oder eine ähnliche Frage in Ihren letzten wichtigen Meetings diskutiert?
+                                    </h2>
+                                </div>
+                            )}
+
+                            {/* Actual Question - in amber outlined box */}
+                            <div className="rounded-xl p-6 mb-8 border-3 border-brand-primary bg-brand-bg shadow-lg">
+                                <p className="text-xl md:text-2xl text-graphite leading-relaxed text-center font-medium">
+                                    {isKIQuestion ? (
+                                        <span>{dim.questions[currentQuestion].text}</span>
+                                    ) : (
+                                        <span className="italic">"{dim.questions[currentQuestion]}"</span>
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Answer Options */}
+                            <div className="space-y-4">
+                                {(isKIQuestion ? dim.questions[currentQuestion].options : assessment.standardOptions).map((option, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleAnswer(option)}
+                                        className="w-full text-left p-5 rounded-xl border-2 border-brand-light bg-white shadow-md hover:border-brand-primary hover:bg-brand-light transition-all duration-200 transform hover:scale-[1.01]"
+                                    >
+                                        <span className="text-lg font-medium text-graphite">{option.text}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Results Screen
+            const results = calculateResults();
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-brand-bg to-brand-light flex items-start justify-center p-4 py-8">
+                    <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl p-6 md:p-10">
+                        {/* Overall Result */}
+                        <div className="text-center mb-8">
+                            <div className="text-5xl mb-4 text-brand-primary">📊</div>
+                            <h2 className="text-3xl font-bold text-graphite mb-3">Ihre Zukunftsfitness-Analyse</h2>
+                            
+                            <div className={`inline-block px-6 py-3 rounded-2xl mb-4 shadow-xl ${
+                                results.overall.color === 'green' ? 'bg-green-100 border-2 border-green-500 text-green-800' :
+                                results.overall.color === 'yellow' ? 'bg-yellow-100 border-2 border-yellow-500 text-yellow-800' :
+                                'bg-red-100 border-2 border-red-500 text-red-800'
+                            }`}>
+                                <p className="text-2xl font-extrabold">{results.overall.badge}</p>
+                            </div>
+                            
+                            <p className="text-lg text-gray-700 mb-4 max-w-2xl mx-auto leading-relaxed">
+                                {results.overall.description}
+                            </p>
+                            
+                            <div className="bg-brand-light/50 rounded-xl p-4 inline-block shadow-inner border border-brand-light">
+                                <p className="text-3xl font-extrabold text-brand-primary">{results.overallPercentage}%</p>
+                                <p className="text-sm text-gray-600">{results.totalPoints} von {results.maxTotalPoints} Punkten erreicht</p>
+                            </div>
+                        </div>
+
+                        {/* Dimension Results */}
+                        <div className="space-y-4 mb-8">
+                            <h3 className="text-2xl font-bold text-graphite border-b border-brand-light pb-2 mb-4">Ihre Bereiche im Detail:</h3>
+                            
+                            {results.dimensionResults.map((dimResult, idx) => (
+                                <div key={idx} className="bg-white rounded-xl p-5 shadow-lg border border-brand-light transition-shadow hover:shadow-xl">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <span className="text-4xl">{dimResult.icon}</span>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-lg text-graphite">{dimResult.name}</h4>
+                                                <p className="text-sm text-gray-600">{dimResult.subtitle}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right mr-3">
+                                                <p className="text-2xl font-bold text-brand-primary">{dimResult.percentage}%</p>
+                                                <p className="text-sm text-gray-500">{dimResult.points} / {dimResult.maxPoints}</p>
+                                            </div>
+                                            <div className={`w-12 h-12 rounded-full ${getStatusColor(dimResult.status)} flex items-center justify-center shadow-inner`}>
+                                                <span className="text-xl text-white font-bold">{getStatusEmoji(dimResult.status)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div 
+                                            className={`h-2.5 rounded-full transition-all duration-500 ${
+                                                dimResult.status === 'green' ? 'bg-green-500' :
+                                                dimResult.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                                            }`}
+                                            style={{width: `${dimResult.percentage}%`}}
+                                        ></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Email Collection (using Future Horizon blue for contrast) */}
+                        {!emailSubmitted ? (
+                            <div className="bg-brand-bg rounded-2xl p-6 mb-6 border-2 border-brand-light shadow-inner">
+                                <div className="text-center mb-6">
+                                    <span className="text-4xl mb-3 block text-brand-future-horizon">🤖✨</span>
+                                    <h3 className="text-xl font-bold text-graphite mb-3">Sie möchten KI-fit werden aber haben kaum Zeit?</h3>
+                                    <p className="text-gray-700 leading-relaxed text-base mb-2">
+                                        Ab 2026 führe ich ein neues <strong>exklusives Format für Top-Führungskräfte</strong> ein!
+                                    </p>
+                                    <p className="text-gray-700 leading-relaxed text-base mb-3">
+                                        <strong>100% individuell</strong> und daher nur mit <strong>limitierten Plätzen</strong>.
+                                    </p>
+                                    <p className="text-gray-700 leading-relaxed text-base">
+                                        <strong>Neugierig?</strong> Lassen Sie Ihre E-Mail Adresse da und Sie erfahren als erster, wenn die Anmeldung startet!
+                                    </p>
+                                </div>
+                                
+                                <form onSubmit={handleEmailSubmit}>
+                                    <div className="flex flex-col md:flex-row gap-3">
+                                        <input 
+                                            type="email" 
+                                            name="email" 
+                                            value={email} 
+                                            onChange={(e) => setEmail(e.target.value)} 
+                                            placeholder="ihre@email.com" 
+                                            className="flex-1 px-6 py-4 rounded-xl border-2 border-brand-light focus:ring-2 focus:ring-brand-primary focus:border-brand-primary focus:outline-none text-lg shadow-sm" 
+                                            required 
+                                        />
+                                        <button 
+                                            type="submit" 
+                                            className="bg-brand-future-horizon hover:bg-brand-future-horizon/80 text-white font-bold px-8 py-4 rounded-xl text-lg shadow-lg transition-all transform hover:scale-[1.02] active:scale-100 whitespace-nowrap"
+                                        >
+                                            Ja, ich will mehr erfahren!
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-600 mt-3 text-center">
+                                        Ihre Daten werden vertraulich behandelt und nur für Updates zum neuen KI-Format verwendet.
+                                    </p>
+                                </form>
+                            </div>
+                        ) : (
+                            <div className="bg-green-50 rounded-2xl p-6 mb-6 text-center border-2 border-green-500 shadow-inner">
+                                <span className="text-5xl mb-3 block text-green-700">✅</span>
+                                <h3 className="text-xl font-bold text-green-900 mb-2">Vielen Dank!</h3>
+                                <p className="text-green-800 text-base mb-2">
+                                    Sie erhalten als einer der ersten eine Information, sobald eine Anmeldung möglich ist.
+                                </p>
+                                <p className="text-green-800 text-base">
+                                    Wenn Sie nicht so lange warten wollen, melden Sie sich jederzeit: <a href="mailto:barbora@zukunftsfit.jetzt" className="font-semibold underline text-green-700 hover:text-green-900">barbora@zukunftsfit.jetzt</a>
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="text-center pt-6 border-t border-brand-light">
+                            <p className="text-sm text-gray-600">
+                                Entwickelt von <strong className="text-brand-primary">Barbora Dörflinger</strong> · <a href="https://zukunftsfit.jetzt" className="text-brand-primary hover:underline font-semibold">zukunftsfit.jetzt</a>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          );
+            );
         }
 
         ReactDOM.createRoot(document.getElementById('root')).render(<ZukunftsfitnesCheck />);
